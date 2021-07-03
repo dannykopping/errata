@@ -1,0 +1,53 @@
+---
+version: '0.1'
+
+categories:
+  login:
+
+errors:
+  - &invalid_request
+    code: "invalid_request"
+    cause: Form submission is invalid
+    categories: [ login ]
+    http:
+      code: 400
+
+  - &unsuccessful
+    code: "unsuccessful"
+    message: Login attempt was unsuccessful, please check given values
+    categories: [ login ]
+    http:
+      code: 403
+
+  - &blocked
+    code: "blocked"
+    message: Account is blocked, please contact support
+    categories: [ login ]
+    http:
+      code: 403
+
+  - <<: *invalid_request
+    code: "missing_values"
+    message: One or more values are missing
+    cause: Form submission was missing required fields
+
+  - <<: *invalid_request
+    code: "invalid_email"
+    message: Please provide a valid email address
+    cause: Given email address is invalid
+
+  - <<: *unsuccessful
+    code: "incorrect_email"
+    message: Given email address is incorrect
+
+  - <<: *unsuccessful
+    code: "incorrect_password"
+    message: Given password is incorrect
+
+  - <<: *blocked
+    code: "account_blocked_spam"
+    message: Account is blocked because of spam
+
+  - <<: *blocked
+    code: "account_blocked_abuse"
+    message: Account is blocked because of abuse

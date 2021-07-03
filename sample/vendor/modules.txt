@@ -1,0 +1,49 @@
+# github.com/andybalholm/brotli v1.0.3
+github.com/andybalholm/brotli
+# github.com/dannykopping/errata v0.0.0 => ../
+## explicit
+github.com/dannykopping/errata
+github.com/dannykopping/errata/pkg/model
+# github.com/davecgh/go-spew v1.1.0
+github.com/davecgh/go-spew/spew
+# github.com/gofiber/fiber/v2 v2.13.0
+## explicit
+github.com/gofiber/fiber/v2
+github.com/gofiber/fiber/v2/internal/bytebufferpool
+github.com/gofiber/fiber/v2/internal/colorable
+github.com/gofiber/fiber/v2/internal/encoding/ascii
+github.com/gofiber/fiber/v2/internal/encoding/json
+github.com/gofiber/fiber/v2/internal/isatty
+github.com/gofiber/fiber/v2/internal/schema
+github.com/gofiber/fiber/v2/internal/uuid
+github.com/gofiber/fiber/v2/utils
+# github.com/imdario/mergo v0.3.12
+## explicit
+# github.com/klauspost/compress v1.13.1
+github.com/klauspost/compress/flate
+github.com/klauspost/compress/gzip
+github.com/klauspost/compress/zlib
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
+# github.com/stretchr/testify v1.7.0
+## explicit
+github.com/stretchr/testify/assert
+github.com/stretchr/testify/require
+# github.com/valyala/bytebufferpool v1.0.0
+github.com/valyala/bytebufferpool
+# github.com/valyala/fasthttp v1.27.0
+github.com/valyala/fasthttp
+github.com/valyala/fasthttp/fasthttputil
+github.com/valyala/fasthttp/reuseport
+github.com/valyala/fasthttp/stackless
+# github.com/valyala/tcplisten v1.0.0
+github.com/valyala/tcplisten
+# golang.org/x/sys v0.0.0-20210616094352-59db8d763f22
+golang.org/x/sys/internal/unsafeheader
+golang.org/x/sys/unix
+golang.org/x/sys/windows
+# gopkg.in/yaml.v2 v2.4.0
+gopkg.in/yaml.v2
+# gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+gopkg.in/yaml.v3
+# github.com/dannykopping/errata => ../
