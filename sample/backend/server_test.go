@@ -1,6 +1,8 @@
 package backend
 
 import (
+	"encoding/json"
+	"io"
 	"net/http/httptest"
 	"net/url"
 	"os"
@@ -8,32 +10,32 @@ import (
 	"testing"
 
 	"github.com/dannykopping/errata"
-	"github.com/dannykopping/errata/pkg/model"
 	"github.com/dannykopping/errata/sample/backend/errors"
 	"github.com/gofiber/fiber/v2"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestErrorResponses(t *testing.T) {
 	server, err := prepareServer(t)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	requests := []struct {
 		email              string
 		password           string
 		expectedStatus     int
 		expectedErrataCode string
+		expectedBody       string
 	}{
-		{"valid@email.com", "1234", 200, ""},
-		{"valid@email.com", "wrong", 403, errors.IncorrectPassword},
-		{"valid@email.com", "", 400, errors.MissingValues},
-		{"", "", 400, errors.MissingValues},
-		{"", "pass", 400, errors.MissingValues},
-		{"spam@email.com", "1234", 403, errors.AccountBlockedSpam},
-		{"abuse@email.com", "1234", 403, errors.AccountBlockedAbuse},
-		{"abuse@email.com", "1234", 403, errors.AccountBlockedAbuse},
-		{"invalid.email", "1234", 400, errors.InvalidEmail},
-		{"missing@email.com", "1234", 403, errors.IncorrectEmail},
+		{"valid@email.com", "1234", 200, "", "Logged in successfully as: valid@email.com"},
+		{"valid@email.com", "wrong", 403, errors.IncorrectPassword, jsonBodyResponse(errors.IncorrectPassword)},
+		{"valid@email.com", "", 400, errors.MissingValues, jsonBodyResponse(errors.MissingValues)},
+		{"", "", 400, errors.MissingValues, jsonBodyResponse(errors.MissingValues)},
+		{"", "pass", 400, errors.MissingValues, jsonBodyResponse(errors.MissingValues)},
+		{"spam@email.com", "1234", 403, errors.AccountBlockedSpam, jsonBodyResponse(errors.AccountBlockedSpam)},
+		{"abuse@email.com", "1234", 403, errors.AccountBlockedAbuse, jsonBodyResponse(errors.AccountBlockedAbuse)},
+		{"abuse@email.com", "1234", 403, errors.AccountBlockedAbuse, jsonBodyResponse(errors.AccountBlockedAbuse)},
+		{"invalid.email", "1234", 400, errors.InvalidEmail, jsonBodyResponse(errors.InvalidEmail)},
+		{"missing@email.com", "1234", 403, errors.IncorrectEmail, jsonBodyResponse(errors.IncorrectEmail)},
 	}
 
 	for _, request := range requests {
@@ -45,22 +47,36 @@ func TestErrorResponses(t *testing.T) {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 		resp, err := server.Test(req, 2000)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
-		require.Equal(t, request.expectedStatus, resp.StatusCode)
-		require.Equal(t, request.expectedErrataCode, resp.Header.Get("X-Errata-Code"))
+		assert.Equal(t, request.expectedStatus, resp.StatusCode)
+		assert.Equal(t, request.expectedErrataCode, resp.Header.Get("X-Errata-Code"))
+		body, err := io.ReadAll(resp.Body)
+		assert.NoError(t, err)
+		assert.Equal(t, request.expectedBody, string(body))
 	}
+}
+
+func jsonBodyResponse(code string) string {
+	val := struct {
+		Code string `json:"code"`
+	}{
+		Code: code,
+	}
+
+	r, _ := json.Marshal(&val)
+	return string(r)
 }
 
 func prepareServer(t *testing.T) (*fiber.App, error) {
 	// TODO don't duplicate this code
 	f, err := os.Open("../errata.yml")
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
-	db, err := model.Parse(f)
-	require.NoError(t, err)
+	db, err := errata.Parse(f)
+	assert.NoError(t, err)
 
-	require.NoError(t, errata.RegisterSource(db))
+	assert.NoError(t, errata.RegisterSource(db))
 
 	server := NewServer()
 	return server, err

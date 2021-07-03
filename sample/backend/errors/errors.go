@@ -10,5 +10,6 @@ const (
 	Blocked             = "blocked"
 	AccountBlockedSpam  = "account_blocked_spam"
 	AccountBlockedAbuse = "account_blocked_abuse"
-)
 
+	ResponseFormattingFailure = "response_formatting_failure"
+)

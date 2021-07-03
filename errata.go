@@ -1,22 +1,22 @@
 package errata
 
-import "github.com/dannykopping/errata/pkg/model"
-
 type DataSource interface {
-	FindByCode(string) error
+	FindByCode(code string) error
 }
 
 type Metadata struct {
-	Key string
+	Key   string
 	Value interface{}
 }
 
-var source DataSource
+var (
+	source DataSource = NewNoopDataSource()
+)
 
 var (
-	InvalidDataSource = model.Error{
+	InvalidDataSource = Error{
 		Code:    "invalid_datasource",
-		Message: "Given errata datasource is invalid",
+		Message: "Given Errata datasource is invalid",
 	}
 )
 

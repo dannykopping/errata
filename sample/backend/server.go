@@ -1,18 +1,18 @@
 package backend
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/dannykopping/errata"
-	"github.com/dannykopping/errata/pkg/model"
 	"github.com/dannykopping/errata/sample/backend/errors"
 	"github.com/gofiber/fiber/v2"
 )
 
 type LoginRequest struct {
 	EmailAddress string `form:"email"`
-	Password string `form:"password"`
+	Password     string `form:"password"`
 }
 
 var database = map[string]map[string]string{
@@ -30,24 +30,7 @@ var database = map[string]map[string]string{
 func NewServer() *fiber.App {
 	app := fiber.New()
 
-	app.Use(func(c *fiber.Ctx) error {
-		err := c.Next()
-
-		if e, ok := err.(*model.Error); e != nil && ok {
-			code := fiber.StatusInternalServerError
-			if e.HTTP != nil {
-				code = e.HTTP.Code
-			}
-
-			fmt.Printf("saw %+v error\n", e)
-
-			c.Response().Header.Add("X-Errata-Code", e.Code)
-			return fiber.NewError(code, e.Error())
-		}
-
-		return err
-	})
-
+	app.Use(errataMiddleware)
 	app.Post("/login", func(c *fiber.Ctx) error {
 		var req LoginRequest
 
@@ -60,10 +43,52 @@ func NewServer() *fiber.App {
 			return errata.New(code)
 		}
 
-		return c.SendString(req.EmailAddress)
+		return c.SendString(fmt.Sprintf("Logged in successfully as: %s", req.EmailAddress))
 	})
 
 	return app
+}
+
+func errataMiddleware(c *fiber.Ctx) error {
+	err := c.Next()
+
+	if e, ok := err.(*errata.Error); e != nil && ok {
+		statusCode := fiber.StatusInternalServerError
+		if e.HTTP != nil {
+			statusCode = e.HTTP.Code
+		}
+
+		c.Response().Header.Add("X-Errata-Code", e.Code)
+
+		body, err := formatError(e)
+		if err != nil {
+			fmt.Printf("formatting error: %q\n", err)
+			return fiber.NewError(fiber.StatusInternalServerError, errors.ResponseFormattingFailure)
+		}
+
+		return fiber.NewError(statusCode, body)
+	}
+
+	return err
+}
+
+func formatError(e *errata.Error) (string, error) {
+	if e == nil {
+		return "", nil
+	}
+
+	s := struct {
+		Code string `json:"code"`
+	}{
+		Code: e.Code,
+	}
+
+	r, err := json.Marshal(&s)
+	if err != nil {
+		return "", err
+	}
+
+	return string(r), nil
 }
 
 func validate(req LoginRequest) string {

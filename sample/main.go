@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/dannykopping/errata"
-	"github.com/dannykopping/errata/pkg/model"
 	"github.com/dannykopping/errata/sample/backend"
 )
 
@@ -16,7 +15,7 @@ func main() {
 		panic(err)
 	}
 
-	db, err := model.Parse(f)
+	db, err := errata.Parse(f)
 	if err != nil {
 		panic(err)
 	}
