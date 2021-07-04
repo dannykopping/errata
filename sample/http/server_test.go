@@ -13,6 +13,7 @@ import (
 	"github.com/dannykopping/errata/sample/errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestErrorResponses(t *testing.T) {
@@ -47,7 +48,7 @@ func TestErrorResponses(t *testing.T) {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 		resp, err := server.Test(req, 2000)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		assert.Equal(t, request.expectedStatus, resp.StatusCode)
 		assert.Equal(t, request.expectedErrataCode, resp.Header.Get("X-Errata-Code"))

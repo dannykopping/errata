@@ -35,7 +35,7 @@ func NewServer() *fiber.App {
 func errataMiddleware(c *fiber.Ctx) error {
 	err := c.Next()
 
-	if e, ok := err.(*errata.Error); e != nil && ok {
+	if e, ok := err.(errata.Error); ok {
 		statusCode := e.HTTPStatusCode(fiber.StatusInternalServerError)
 		c.Response().Header.Add("X-Errata-Code", e.Code)
 
@@ -51,11 +51,7 @@ func errataMiddleware(c *fiber.Ctx) error {
 	return err
 }
 
-func formatError(e *errata.Error) (string, error) {
-	if e == nil {
-		return "", nil
-	}
-
+func formatError(e errata.Error) (string, error) {
 	s := struct {
 		Code string `json:"code"`
 	}{
