@@ -1,9 +1,6 @@
 ---
 version: '0.1'
 
-categories:
-  login:
-
 errors:
   - &invalid_request
     code: "invalid_request"

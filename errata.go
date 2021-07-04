@@ -1,16 +1,7 @@
 package errata
 
-type DataSource interface {
-	FindByCode(code string) Error
-}
-
-type Metadata struct {
-	Key   string
-	Value interface{}
-}
-
 var (
-	source DataSource = NewNoopDataSource()
+	source DataSource = NewNullDataSource()
 )
 
 var (
@@ -20,7 +11,7 @@ var (
 	}
 )
 
-func RegisterSource(ds DataSource) error {
+func RegisterDataSource(ds DataSource) error {
 	if ds == nil {
 		return InvalidDataSource
 	}

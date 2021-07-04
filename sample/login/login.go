@@ -24,7 +24,7 @@ var database = map[string]map[string]string{
 	},
 }
 
-// Validate given request against database, returning error code if present
+// Validate given request against database, returning error if present
 func Validate(req Request) error {
 	code := validate(req)
 	if code == "" {

@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"strings"
 	"testing"
 
@@ -18,7 +17,7 @@ import (
 
 func TestErrorResponses(t *testing.T) {
 	server, err := prepareServer(t)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	requests := []struct {
 		email              string
@@ -27,16 +26,16 @@ func TestErrorResponses(t *testing.T) {
 		expectedErrataCode string
 		expectedBody       string
 	}{
-		{"valid@email.com", "1234", 200, "", "Logged in successfully as: valid@email.com"},
-		{"valid@email.com", "wrong", 403, errors.IncorrectPassword, jsonBodyResponse(errors.IncorrectPassword)},
-		{"valid@email.com", "", 400, errors.MissingValues, jsonBodyResponse(errors.MissingValues)},
-		{"", "", 400, errors.MissingValues, jsonBodyResponse(errors.MissingValues)},
-		{"", "pass", 400, errors.MissingValues, jsonBodyResponse(errors.MissingValues)},
-		{"spam@email.com", "1234", 403, errors.AccountBlockedSpam, jsonBodyResponse(errors.AccountBlockedSpam)},
-		{"abuse@email.com", "1234", 403, errors.AccountBlockedAbuse, jsonBodyResponse(errors.AccountBlockedAbuse)},
-		{"abuse@email.com", "1234", 403, errors.AccountBlockedAbuse, jsonBodyResponse(errors.AccountBlockedAbuse)},
-		{"invalid.email", "1234", 400, errors.InvalidEmail, jsonBodyResponse(errors.InvalidEmail)},
-		{"missing@email.com", "1234", 403, errors.IncorrectEmail, jsonBodyResponse(errors.IncorrectEmail)},
+		{"valid@email.com", "1234", fiber.StatusOK, "", "Logged in successfully as: valid@email.com"},
+		{"valid@email.com", "wrong", fiber.StatusForbidden, errors.IncorrectPassword, jsonBodyResponse(errors.IncorrectPassword)},
+		{"valid@email.com", "", fiber.StatusBadRequest, errors.MissingValues, jsonBodyResponse(errors.MissingValues)},
+		{"", "", fiber.StatusBadRequest, errors.MissingValues, jsonBodyResponse(errors.MissingValues)},
+		{"", "pass", fiber.StatusBadRequest, errors.MissingValues, jsonBodyResponse(errors.MissingValues)},
+		{"spam@email.com", "1234", fiber.StatusForbidden, errors.AccountBlockedSpam, jsonBodyResponse(errors.AccountBlockedSpam)},
+		{"abuse@email.com", "1234", fiber.StatusForbidden, errors.AccountBlockedAbuse, jsonBodyResponse(errors.AccountBlockedAbuse)},
+		{"abuse@email.com", "1234", fiber.StatusForbidden, errors.AccountBlockedAbuse, jsonBodyResponse(errors.AccountBlockedAbuse)},
+		{"invalid.email", "1234", fiber.StatusBadRequest, errors.InvalidEmail, jsonBodyResponse(errors.InvalidEmail)},
+		{"missing@email.com", "1234", fiber.StatusForbidden, errors.IncorrectEmail, jsonBodyResponse(errors.IncorrectEmail)},
 	}
 
 	for _, request := range requests {
@@ -70,15 +69,11 @@ func jsonBodyResponse(code string) string {
 }
 
 func prepareServer(t *testing.T) (*fiber.App, error) {
-	// TODO don't duplicate this code
-	f, err := os.Open("../errata.yml")
-	assert.NoError(t, err)
+	db, err := errata.NewFileDatasource("../errata.yml")
+	require.NoError(t, err)
 
-	db, err := errata.Parse(f)
-	assert.NoError(t, err)
-
-	assert.NoError(t, errata.RegisterSource(db))
+	assert.NoError(t, errata.RegisterDataSource(db))
 
 	server := NewServer()
-	return server, err
+	return server, nil
 }

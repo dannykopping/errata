@@ -1,12 +1,13 @@
 package errata
 
-type NoopDataSource struct {}
-
-func NewNoopDataSource() *NoopDataSource {
-	return &NoopDataSource{}
+type DataSource interface {
+	FindByCode(code string) Error
 }
 
-func (n *NoopDataSource) FindByCode(code string) Error {
-	return New(code)
-}
+var (
+	DatasourceUninitializedError = Error{
+		Code:    "datasource_uninitialized",
+		Message: "Configured database could not be initialized",
+	}
+)
 

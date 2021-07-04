@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -11,12 +10,12 @@ import (
 )
 
 func main() {
-	db, err := readDatabaseFromFile("errata.yml")
+	ds, err := errata.NewFileDatasource("errata.yml")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err := errata.RegisterSource(db); err != nil {
+	if err := errata.RegisterDataSource(ds); err != nil {
 		log.Fatal(err)
 	}
 
@@ -47,20 +46,4 @@ func runHTTP() error {
 func runShell() error {
 	app := shell.NewApp()
 	return app.Run(os.Args[1:])
-}
-
-func readDatabaseFromFile(file string) (*errata.Database, error) {
-	f, err := os.Open(file)
-	if err != nil {
-		fmt.Printf("db open error: %s\n", err)
-		return nil, errata.DatabaseFileOpen
-	}
-
-	db, err := errata.Parse(f)
-	if err != nil {
-		fmt.Printf("db parse error: %s\n", err)
-		return nil, errata.DatabaseFileParse
-	}
-
-	return db, nil
 }

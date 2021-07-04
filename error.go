@@ -6,9 +6,16 @@ type Error struct {
 	Cause      string   `yaml:"cause,omitempty"`
 	Categories []string `yaml:"categories,omitempty,flow"`
 
-	External *Error `yaml:"external,omitempty"`
 	HTTP     *HTTP  `yaml:"http,omitempty"`
 	Shell    *Shell `yaml:"shell,omitempty"`
+}
+
+type HTTP struct {
+	StatusCode int `yaml:"status_code"`
+}
+
+type Shell struct {
+	ExitCode int `yaml:"exit_code"`
 }
 
 func (e Error) Error() string {

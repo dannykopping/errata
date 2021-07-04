@@ -2,13 +2,13 @@ package shell
 
 import (
 	"fmt"
-	"os"
 	"reflect"
 	"testing"
 
 	"github.com/dannykopping/errata"
 	"github.com/dannykopping/errata/sample/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/urfave/cli/v2"
 )
 
@@ -65,15 +65,11 @@ func stdoutResponse(code string) string {
 }
 
 func prepareShell(t *testing.T) (*cli.App, error) {
-	// TODO don't duplicate this code
-	f, err := os.Open("../errata.yml")
-	assert.NoError(t, err)
+	db, err := errata.NewFileDatasource("../errata.yml")
+	require.NoError(t, err)
 
-	db, err := errata.Parse(f)
-	assert.NoError(t, err)
-
-	assert.NoError(t, errata.RegisterSource(db))
+	assert.NoError(t, errata.RegisterDataSource(db))
 
 	server := NewApp()
-	return server, err
+	return server, nil
 }
