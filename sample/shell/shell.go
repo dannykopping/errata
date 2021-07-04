@@ -50,11 +50,10 @@ func usageText() string {
 }
 
 func loginAction(c *cli.Context) error {
-	code := login.Validate(request)
-	if code == "" {
+	err, ok := login.Validate(request).(errata.Error)
+	if !ok {
 		return cli.Exit(fmt.Sprintf("Logged in successfully as: %s", request.EmailAddress), SuccessCode)
 	}
 
-	err := errata.New(code)
 	return cli.Exit(fmt.Sprintf("%s: %q", err.Code, err.Message), err.ShellExitCode(1))
 }

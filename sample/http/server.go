@@ -17,13 +17,12 @@ func NewServer() *fiber.App {
 	app.Post("/login", func(c *fiber.Ctx) error {
 		var req login.Request
 
-		err := c.BodyParser(&req)
-		if err != nil {
+		if err := c.BodyParser(&req); err != nil {
 			return errata.New(errors.InvalidRequest)
 		}
 
-		if code := login.Validate(req); code != "" {
-			return errata.New(code)
+		if err := login.Validate(req); err != nil {
+			return err
 		}
 
 		return c.SendString(fmt.Sprintf("Logged in successfully as: %s", req.EmailAddress))

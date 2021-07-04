@@ -3,6 +3,7 @@ package login
 import (
 	"strings"
 
+	"github.com/dannykopping/errata"
 	"github.com/dannykopping/errata/sample/errors"
 )
 
@@ -24,7 +25,16 @@ var database = map[string]map[string]string{
 }
 
 // Validate given request against database, returning error code if present
-func Validate(req Request) string {
+func Validate(req Request) error {
+	code := validate(req)
+	if code == "" {
+		return nil
+	}
+
+	return errata.New(code)
+}
+
+func validate(req Request) string {
 	if req.EmailAddress == "" || req.Password == "" {
 		return errors.MissingValues
 	}
