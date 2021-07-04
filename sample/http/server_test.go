@@ -1,4 +1,4 @@
-package backend
+package http
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/dannykopping/errata"
-	"github.com/dannykopping/errata/sample/backend/errors"
+	"github.com/dannykopping/errata/sample/errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 )

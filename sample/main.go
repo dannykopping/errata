@@ -6,31 +6,61 @@ import (
 	"os"
 
 	"github.com/dannykopping/errata"
-	"github.com/dannykopping/errata/sample/backend"
+	"github.com/dannykopping/errata/sample/http"
+	"github.com/dannykopping/errata/sample/shell"
 )
 
 func main() {
-	f, err := os.Open("errata.yml")
+	db, err := readDatabaseFromFile("errata.yml")
 	if err != nil {
-		panic(err)
-	}
-
-	db, err := errata.Parse(f)
-	if err != nil {
-		panic(err)
-	}
-
-	for _, e := range db.Errors {
-		fmt.Printf("err: %q %p\n", e.Code, e)
-		if e.External != nil {
-			fmt.Printf("\texternal err: %q %p\n", e.External.Code, &e.External)
-		}
+		log.Fatal(err)
 	}
 
 	if err := errata.RegisterSource(db); err != nil {
 		log.Fatal(err)
 	}
 
-	server := backend.NewServer()
-	log.Fatal(server.Listen(":3000"))
+	if len(os.Args) < 1 {
+		showHelp()
+	}
+
+	mode := os.Args[1]
+	switch mode {
+	case "http":
+		log.Fatal(runHTTP())
+	case "shell":
+		runShell()
+	default:
+		showHelp()
+	}
+}
+
+func showHelp() {
+	log.Fatal(`select a mode: "http" or "shell"`)
+}
+
+func runHTTP() error {
+	server := http.NewServer()
+	return server.Listen(":3000")
+}
+
+func runShell() error {
+	app := shell.NewApp()
+	return app.Run(os.Args[1:])
+}
+
+func readDatabaseFromFile(file string) (*errata.Database, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		fmt.Printf("db open error: %s\n", err)
+		return nil, errata.DatabaseFileOpen
+	}
+
+	db, err := errata.Parse(f)
+	if err != nil {
+		fmt.Printf("db parse error: %s\n", err)
+		return nil, errata.DatabaseFileParse
+	}
+
+	return db, nil
 }

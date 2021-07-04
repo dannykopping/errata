@@ -10,21 +10,27 @@ errors:
     cause: Form submission is invalid
     categories: [ login ]
     http:
-      code: 400
+      status_code: 400
+    shell:
+      exit_code: 1
 
   - &unsuccessful
     code: "unsuccessful"
     message: Login attempt was unsuccessful, please check given values
     categories: [ login ]
     http:
-      code: 403
+      status_code: 403
+    shell:
+      exit_code: 2
 
   - &blocked
     code: "blocked"
     message: Account is blocked, please contact support
     categories: [ login ]
     http:
-      code: 403
+      status_code: 403
+    shell:
+      exit_code: 3
 
   - <<: *invalid_request
     code: "missing_values"

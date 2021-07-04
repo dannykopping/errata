@@ -11,10 +11,22 @@ type Database struct {
 }
 
 type HTTP struct {
-	Code int `yaml:"code"`
+	StatusCode int `yaml:"status_code"`
+}
+
+type Shell struct {
+	ExitCode int `yaml:"exit_code"`
 }
 
 var (
+	DatabaseFileOpen = Error{
+		Code:    "db_file_open",
+		Message: "Errata database file cannot be opened",
+	}
+	DatabaseFileParse = Error{
+		Code:    "db_file_parse",
+		Message: "Errata database file cannot be parsed",
+	}
 	DatabaseUninitialized = Error{
 		Code:    "db_uninitialized",
 		Message: "Errata database is not initialized",
@@ -25,17 +37,17 @@ var (
 	}
 )
 
-func (db *Database) FindByCode(code string) error {
+func (db *Database) FindByCode(code string) Error {
 	if db == nil {
-		return &DatabaseUninitialized
+		return DatabaseUninitialized
 	}
 
 	for _, e := range db.Errors {
 		if e.Code == code {
-			return e
+			return *e
 		}
 	}
 
 	fmt.Printf("could not find code: %q\n", code)
-	return &UnknownErrataCode
+	return UnknownErrataCode
 }

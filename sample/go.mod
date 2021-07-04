@@ -7,6 +7,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.13.0
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/stretchr/testify v1.7.0
+	github.com/urfave/cli/v2 v2.3.0
 )
 
 replace github.com/dannykopping/errata => ../

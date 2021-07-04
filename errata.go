@@ -1,7 +1,7 @@
 package errata
 
 type DataSource interface {
-	FindByCode(code string) error
+	FindByCode(code string) Error
 }
 
 type Metadata struct {
@@ -22,13 +22,13 @@ var (
 
 func RegisterSource(ds DataSource) error {
 	if ds == nil {
-		return &InvalidDataSource
+		return InvalidDataSource
 	}
 
 	source = ds
 	return nil
 }
 
-func New(code string) error {
+func New(code string) Error {
 	return source.FindByCode(code)
 }
