@@ -1,13 +1,21 @@
 package errata
 
-type NullDataSource struct {}
+import (
+	"github.com/dannykopping/errata/pkg/errors"
+)
 
-func NewNullDataSource() *NullDataSource {
+type NullDataSource struct{}
+
+func NewNullDataSource() DataSource {
 	return &NullDataSource{}
 }
 
-func (n *NullDataSource) FindByCode(code string) Error {
-	return Error{
+func (n *NullDataSource) FindByCode(code string) errors.Error {
+	return errors.Error{
 		Code: code,
 	}
+}
+
+func (n *NullDataSource) List() []errors.Error {
+	return []errors.Error{}
 }

@@ -1,41 +1,33 @@
 package errata
 
 import (
-	"fmt"
 	"io"
 	"os"
 
+	internal "github.com/dannykopping/errata/internal"
+	"github.com/dannykopping/errata/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
 type fileDatasource struct {
 	Version string `yaml:"version"`
 
-	Errors []*Error `yaml:"errors"`
+	Errors []errors.Error `yaml:"errors"`
 }
 
-var (
-	fileOpenError = Error{
-		Code:    "db_file_open",
-		Message: "Errata database file cannot be opened",
+func NewFileDatasource(path string) (DataSource, error) {
+	if _, err := os.Stat(path); err != nil {
+		return nil, internal.FileNotFound().Wrap(err)
 	}
-	fileParseError = Error{
-		Code:    "db_file_parse",
-		Message: "Errata database file cannot be parsed",
-	}
-)
 
-func NewFileDatasource(path string) (*fileDatasource, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		fmt.Printf("db open error: %s\n", err)
-		return nil, fileOpenError
+		return nil, internal.FileNotReadable().Wrap(err)
 	}
 
 	db, err := parse(f)
 	if err != nil {
-		fmt.Printf("db parse error: %s\n", err)
-		return nil, fileParseError
+		return nil, internal.SyntaxError().Wrap(err)
 	}
 
 	return db, nil
@@ -57,18 +49,19 @@ func parse(reader io.Reader) (*fileDatasource, error) {
 	return db, nil
 }
 
-func (db *fileDatasource) FindByCode(code string) Error {
-	if db == nil {
-		return DatasourceUninitializedError
-	}
+func (db *fileDatasource) FindByCode(code string) errors.Error {
 	for _, e := range db.Errors {
 		if e.Code == code {
-			return *e
+			return e
 		}
 	}
 
 	// if we cannot find the error by code, create one
-	return Error{
+	return errors.Error{
 		Code: code,
 	}
+}
+
+func (db *fileDatasource) List() []errors.Error {
+	return db.Errors
 }

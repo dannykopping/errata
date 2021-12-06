@@ -1,0 +1,24 @@
+---
+version: '0.1'
+
+errors:
+  - code: file_not_found
+    message: YML file path is incorrect or inaccessible
+    categories: [ file ]
+    shell:
+      exit_code: 1
+  - code: file_not_readable
+    message: YML file path is unreadable
+    categories: [ file ]
+    shell:
+      exit_code: 1
+  - code: syntax_error
+    message: YML file is malformed
+    categories: [ parsing ]
+    shell:
+      exit_code: 2
+  - code: code_gen_error
+    message: Code generation failed
+    categories: [ codegen ]
+    shell:
+      exit_code: 3

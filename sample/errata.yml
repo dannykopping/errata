@@ -4,8 +4,9 @@ version: '0.1'
 errors:
   - &invalid_request
     code: "invalid_request"
+    message: Request was invalid
     cause: Form submission is invalid
-    categories: [ login ]
+    categories: [ login, other_stuff ]
     http:
       status_code: 400
     shell:

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/dannykopping/errata"
+	"github.com/dannykopping/errata/internal"
 	"github.com/dannykopping/errata/sample/errors"
 	"github.com/dannykopping/errata/sample/login"
 	"github.com/gofiber/fiber/v2"
@@ -34,7 +35,7 @@ func NewServer() *fiber.App {
 func errataMiddleware(c *fiber.Ctx) error {
 	err := c.Next()
 
-	if e, ok := err.(errata.Error); ok {
+	if e, ok := err.(internal.Error); ok {
 		statusCode := e.HTTPStatusCode(fiber.StatusInternalServerError)
 		c.Response().Header.Add("X-Errata-Code", e.Code)
 
@@ -50,7 +51,7 @@ func errataMiddleware(c *fiber.Ctx) error {
 	return err
 }
 
-func formatError(e errata.Error) (string, error) {
+func formatError(e internal.Error) (string, error) {
 	s := struct {
 		Code string `json:"code"`
 	}{

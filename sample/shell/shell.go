@@ -3,7 +3,7 @@ package shell
 import (
 	"fmt"
 
-	"github.com/dannykopping/errata"
+	"github.com/dannykopping/errata/internal"
 	"github.com/dannykopping/errata/sample/login"
 	"github.com/urfave/cli/v2"
 )
@@ -50,7 +50,7 @@ func usageText() string {
 }
 
 func loginAction(c *cli.Context) error {
-	err, ok := login.Validate(request).(errata.Error)
+	err, ok := login.Validate(request).(internal.Error)
 	if !ok {
 		return cli.Exit(fmt.Sprintf("Logged in successfully as: %s", request.EmailAddress), SuccessCode)
 	}
