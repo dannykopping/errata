@@ -11,6 +11,8 @@ errors:
       status_code: 400
     shell:
       exit_code: 1
+    args:
+      - username
 
   - &unsuccessful
     code: "unsuccessful"
@@ -24,7 +26,7 @@ errors:
   - &blocked
     code: "blocked"
     message: Account is blocked, please contact support
-    categories: [ login ]
+    categories: [ login, blerp ]
     http:
       status_code: 403
     shell:
@@ -54,4 +56,11 @@ errors:
 
   - <<: *blocked
     code: "account_blocked_abuse"
-    message: Account is blocked because of abuse
+    message: Account is blocked because of abuse %s %v %v
+    args:
+      - reason
+      - accountBalance
+      - empty
+    labels:
+      bob: "McGuiness"
+      harry: "McNab"

@@ -1,29 +1,31 @@
 package errata
 
 import (
+	"fmt"
+
 	"github.com/dannykopping/errata/pkg/errors"
 )
 
 var (
-	source DataSource = NewNullDataSource()
+	source DataSource
 )
 
 var (
-	InvalidDataSource = errors.Error{
-		Code:    "invalid_datasource",
-		Message: "Given Errata datasource is invalid",
+	InvalidDataSource = map[string]interface{}{
+		"Code": "invalid_datasource",
 	}
 )
 
 func RegisterDataSource(ds DataSource) error {
 	if ds == nil {
-		return InvalidDataSource
+		// TODO: use errata
+		return fmt.Errorf("invalid datasource")
 	}
 
 	source = ds
 	return nil
 }
 
-func New(code string) errors.Error {
+func New(code string) errors.ErrorDefinition {
 	return source.FindByCode(code)
 }

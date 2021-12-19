@@ -4,7 +4,6 @@ import (
 	"embed"
 	"fmt"
 	"os"
-	"strings"
 	"text/template"
 
 	"github.com/dannykopping/errata"
@@ -14,7 +13,7 @@ import (
 )
 
 var (
-	//go:embed templates
+	//go:embed templates/*
 	templates embed.FS
 
 	edsFile string
@@ -24,7 +23,7 @@ var (
 
 type Tmpl struct {
 	Package string
-	Errors  []errors.Error
+	Errors  map[string]errors.ErrorDefinition
 }
 
 func generate(_ *cli.Context) error {
@@ -37,7 +36,7 @@ func generate(_ *cli.Context) error {
 	//		-> built-in: -template=golang
 	//		-> external: -template=my-template.tmpl
 	file := fmt.Sprintf("%s.tmpl", lang)
-	path := fmt.Sprintf("templates/%s", file)
+	path := fmt.Sprintf("templates/%s/%s", lang, file)
 
 	data := Tmpl{
 		Package: pkg,
@@ -46,30 +45,40 @@ func generate(_ *cli.Context) error {
 
 	_, err = templates.Open(path)
 	if err != nil {
-		return TemplateNotFoundErr().Wrap(err)
+		return TemplateNotFound(path).Wrap(err)
 	}
 
 	tmpl, err := template.New(file).
 		Funcs(template.FuncMap{
 			"constantize": strcase.ToCamel,
-			"quote": func(in []string) []string {
-				var out []string
-				for _, s := range in {
-					out = append(out, fmt.Sprintf("%q", s))
-				}
-				return out
+			"hasNext": func(index int, len int) bool {
+				return index+1 < len
 			},
-			"list": func(in []string) string {
-				return strings.Join(in, ", ")
+			// credit: https://stackoverflow.com/a/18276968
+			"input": func(in ...interface{}) (map[string]interface{}, error) {
+				if len(in)%2 != 0 {
+					return nil, fmt.Errorf("uneven set of parameter pairs")
+				}
+
+				var out = make(map[string]interface{}, len(in)/2)
+				for i := 0; i < len(in); i += 2 {
+					key, ok := in[i].(string)
+					if !ok {
+						return nil, fmt.Errorf("keys must be strings")
+					}
+					out[key] = in[i+1]
+				}
+
+				return out, nil
 			},
 		}).
-		ParseFS(templates, path)
+		ParseFS(templates, "templates/**/*")
 
 	if err != nil {
-		return TemplateSyntaxErr().Wrap(err)
+		return TemplateSyntax().Wrap(err)
 	}
 
-	return TemplateExecutionErr().Wrap(
+	return TemplateExecution().Wrap(
 		tmpl.Execute(os.Stdout, data),
 	)
 }

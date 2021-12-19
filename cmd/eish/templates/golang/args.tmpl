@@ -1,0 +1,12 @@
+{{ define "args" }}
+{{- $len := len .values -}}
+
+{{ range $i, $arg := .values }}
+  {{- if $.quoted -}}"{{- end -}}
+  {{- $arg -}}
+  {{- if $.quoted -}}"{{- end -}}
+  {{- if hasNext $i $len -}}, {{ end -}}
+{{- end -}}
+
+
+{{ end }}

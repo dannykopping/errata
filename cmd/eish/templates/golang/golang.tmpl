@@ -1,0 +1,49 @@
+package {{ .Package }}
+
+import "fmt"
+
+type Error struct {
+    Code       string
+    Message    string
+    Cause      string
+    Categories []string
+    Labels     map[string]string
+
+    inner error
+}
+
+func (e Error) Wrap(err error) error {
+    if err == nil {
+        return nil
+    }
+
+    e.inner = err
+    return e
+}
+
+func (e Error) Unwrap() error {
+    return e.inner
+}
+
+func (e Error) Error() string {
+    if w := e.Unwrap(); w != nil {
+        return fmt.Sprintf("[code: %s] %s", e.Code, w)
+    }
+
+    return e.Code
+}
+
+{{ range $code, $error := .Errors -}}
+func {{ $code | constantize }}({{- template "params" $error.Definition -}}) Error {
+    return Error{
+        Code: "{{ $code }}",
+        Message: {{ template "msg" $error.Definition -}},
+        Cause: "{{ or $error.Definition.cause "" }}",
+        Categories: []string{ {{- template "args" input "values" $error.Definition.categories "quoted" true -}} },
+        Labels: map[string]string{
+            {{- template "map" input "values" $error.Definition.labels "quoted" true }}
+        },
+    }
+}
+
+{{ end -}}

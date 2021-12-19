@@ -50,9 +50,10 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 
-		var e errata.Error
+		var e errata.ErrorDefinition
 		if errors.As(err, &e) {
-			os.Exit(e.Shell.ExitCode)
+			// TODO: use exit code defined in definition
+			os.Exit(1)
 		}
 	}
 }

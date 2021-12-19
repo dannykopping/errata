@@ -2,22 +2,24 @@
 version: '0.1'
 
 errors:
-  - code: template_not_found
-    message: Template path is incorrect or inaccessible
+  template_not_found:
+    message: Template path [%s] is incorrect or inaccessible
     categories: [ file ]
     shell:
       exit_code: 1
-  - code: template_not_readable
+    args:
+      - path
+  template_not_readable:
     message: Template path is unreadable
     categories: [ file ]
     shell:
       exit_code: 1
-  - code: template_syntax
+  template_syntax:
     message: Syntax error in template
     categories: [ codegen ]
     shell:
       exit_code: 2
-  - code: template_execution
+  template_execution:
     message: Error in template execution
     cause: Possible use of missing or renamed field
     categories: [ codegen ]

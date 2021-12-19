@@ -7,9 +7,13 @@ errors:
     categories: [ file ]
     shell:
       exit_code: 1
+    args:
+      - path
   - code: file_not_readable
     message: YML file path is unreadable
     categories: [ file ]
+    args:
+      - path
     shell:
       exit_code: 1
   - code: syntax_error

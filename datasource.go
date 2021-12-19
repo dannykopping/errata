@@ -1,10 +1,8 @@
 package errata
 
-import (
-	"github.com/dannykopping/errata/pkg/errors"
-)
+import "github.com/dannykopping/errata/pkg/errors"
 
 type DataSource interface {
-	List() []errors.Error
-	FindByCode(code string) errors.Error
+	List() map[string]errors.ErrorDefinition
+	FindByCode(code string) errors.ErrorDefinition
 }
