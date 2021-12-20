@@ -1,4 +1,4 @@
-package errors
+package errata
 
 type ErrorDefinition struct {
 	Code       string

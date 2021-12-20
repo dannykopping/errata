@@ -1,4 +1,4 @@
-package main
+package errata
 
 import (
 	"embed"
@@ -6,28 +6,27 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/dannykopping/errata"
-	"github.com/dannykopping/errata/pkg/errors"
 	"github.com/iancoleman/strcase"
-	"github.com/urfave/cli/v2"
 )
 
 var (
 	//go:embed templates/*
 	templates embed.FS
-
-	edsFile string
-	lang    string
-	pkg     string
 )
 
 type Tmpl struct {
 	Package string
-	Errors  map[string]errors.ErrorDefinition
+	Errors  map[string]ErrorDefinition
 }
 
-func generate(_ *cli.Context) error {
-	source, err := errata.NewFileDatasource(edsFile)
+type CodeGen struct {
+	File    string
+	Lang    string
+	Package string
+}
+
+func Generate(data CodeGen) error {
+	source, err := NewFileDatasource(data.File)
 	if err != nil {
 		return err
 	}
@@ -35,11 +34,11 @@ func generate(_ *cli.Context) error {
 	// TODO: support built-in and external templates
 	//		-> built-in: -template=golang
 	//		-> external: -template=my-template.tmpl
-	file := fmt.Sprintf("%s.tmpl", lang)
-	path := fmt.Sprintf("templates/%s/%s", lang, file)
+	file := fmt.Sprintf("%s.tmpl", data.Lang)
+	path := fmt.Sprintf("templates/%s/%s", data.Lang, file)
 
-	data := Tmpl{
-		Package: pkg,
+	tmplData := Tmpl{
+		Package: data.Package,
 		Errors:  source.List(),
 	}
 
@@ -71,6 +70,9 @@ func generate(_ *cli.Context) error {
 
 				return out, nil
 			},
+			"debug": func(val interface{}) string {
+				return ""
+			},
 		}).
 		ParseFS(templates, "templates/**/*")
 
@@ -79,6 +81,6 @@ func generate(_ *cli.Context) error {
 	}
 
 	return TemplateExecution().Wrap(
-		tmpl.Execute(os.Stdout, data),
+		tmpl.Execute(os.Stdout, tmplData),
 	)
 }

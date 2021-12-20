@@ -1,0 +1,10 @@
+{{ define "map" }}
+{{- if .values -}}
+  {{- range $key, $value := .values }}
+          "{{ $key -}}": {{ if $.quoted -}}"{{- end -}}
+          {{- $value -}}
+          {{- if $.quoted -}}"{{- end -}}
+  ,
+  {{- end -}}
+{{- end -}}
+{{ end }}

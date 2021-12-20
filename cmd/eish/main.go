@@ -4,12 +4,15 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 
-	errata "github.com/dannykopping/errata/pkg/errors"
+	"github.com/dannykopping/errata"
 	"github.com/urfave/cli/v2"
 )
 
 func main() {
+	var codeGen errata.CodeGen
+
 	app := &cli.App{
 		Name:     "EISH",
 		Usage:    "Errata Interactive SHell",
@@ -28,32 +31,38 @@ func main() {
 					&cli.StringFlag{
 						Name:        "eds.file",
 						Required:    true,
-						Destination: &edsFile,
+						Destination: &codeGen.File,
 					},
 					&cli.StringFlag{
 						Name:        "language",
 						Value:       "golang",
-						Destination: &lang,
+						Destination: &codeGen.Lang,
 					},
 					&cli.StringFlag{
 						Name:        "package",
 						Value:       "errors",
-						Destination: &pkg,
+						Destination: &codeGen.Package,
 					},
 				},
-				Action: generate,
+				Action: func(_ *cli.Context) error {
+					return errata.Generate(codeGen)
+				},
 			},
 		},
 	}
 
 	err := app.Run(os.Args)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
 
-		var e errata.ErrorDefinition
+		var e errata.Error
 		if errors.As(err, &e) {
-			// TODO: use exit code defined in definition
-			os.Exit(1)
+			code, err := strconv.Atoi(e.GetMeta("shell_exit_code", "1"))
+			if err == nil {
+				os.Exit(code)
+			}
 		}
+
+		os.Exit(1)
 	}
 }

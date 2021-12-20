@@ -1,9 +1,0 @@
-{{ define "map" }}
-{{- range $key, $value := .values }}
-          "{{ $key -}}":
-          {{- if $.quoted -}}"{{- end -}}
-          {{- $value -}}
-          {{- if $.quoted -}}"{{- end -}}
-  ,
-{{- end -}}
-{{ end }}

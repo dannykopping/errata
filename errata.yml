@@ -2,27 +2,47 @@
 version: '0.1'
 
 errors:
-  - code: file_not_found
-    message: YML file path is incorrect or inaccessible
-    categories: [ file ]
-    shell:
-      exit_code: 1
-    args:
-      - path
-  - code: file_not_readable
-    message: YML file path is unreadable
+  file_not_found:
+    message: YML file [%s] is incorrect or inaccessible
     categories: [ file ]
     args:
       - path
-    shell:
-      exit_code: 1
-  - code: syntax_error
-    message: YML file is malformed
+  file_not_readable:
+    message: YML file [%s] is unreadable
+    categories: [ file ]
+    args:
+      - path
+  syntax_error:
+    message: YML file [%s] is malformed
     categories: [ parsing ]
-    shell:
-      exit_code: 2
-  - code: code_gen_error
+    args:
+      - path
+  code_gen_error:
     message: Code generation failed
     categories: [ codegen ]
-    shell:
-      exit_code: 3
+  invalid_datasource:
+    message: Configured datasource [%s] is invalid
+    categories: [ init ]
+    args:
+      - datasource
+  template_not_found:
+    message: Template path [%s] is incorrect or inaccessible
+    categories: [ file ]
+    args:
+      - path
+  template_not_readable:
+    message: Template path [%s] is unreadable
+    categories: [ file ]
+    args:
+      - path
+  template_syntax:
+    message: Syntax error in template
+    categories: [ codegen ]
+    metadata:
+      shell_exit_code: 2
+  template_execution:
+    message: Error in template execution
+    cause: Possible use of missing or renamed field
+    categories: [ codegen ]
+    metadata:
+      shell_exit_code: 3

@@ -16,15 +16,11 @@ errors:
   template_not_found:
     message: Template path [%s] is incorrect or inaccessible
     categories: [ file ]
-    shell:
-      exit_code: 1
     args:
       - path
   template_syntax:
     message: Syntax error in template
     categories: [ codegen ]
-    shell:
-      exit_code: 2
 `
 
 func TestUnmarshal(t *testing.T) {
