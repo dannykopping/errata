@@ -5,8 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/dannykopping/errata"
-	"github.com/dannykopping/errata/sample/errors"
+	"github.com/dannykopping/errata/sample/errata"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/urfave/cli/v2"
@@ -24,15 +23,15 @@ func TestErrorResponses(t *testing.T) {
 		expectedStdout     string
 	}{
 		{"valid@email.com", "1234", SuccessCode, "", "Logged in successfully as: valid@email.com"},
-		{"valid@email.com", "wrong", UnsuccessfulCode, errors.IncorrectPassword, stdoutResponse(errors.IncorrectPassword)},
-		{"valid@email.com", "", InvalidCode, errors.MissingValues, stdoutResponse(errors.MissingValues)},
-		{"", "", InvalidCode, errors.MissingValues, stdoutResponse(errors.MissingValues)},
-		{"", "pass", InvalidCode, errors.MissingValues, stdoutResponse(errors.MissingValues)},
-		{"spam@email.com", "1234", BlockedCode, errors.AccountBlockedSpam, stdoutResponse(errors.AccountBlockedSpam)},
-		{"abuse@email.com", "1234", BlockedCode, errors.AccountBlockedAbuse, stdoutResponse(errors.AccountBlockedAbuse)},
-		{"abuse@email.com", "1234", BlockedCode, errors.AccountBlockedAbuse, stdoutResponse(errors.AccountBlockedAbuse)},
-		{"invalid.email", "1234", InvalidCode, errors.InvalidEmail, stdoutResponse(errors.InvalidEmail)},
-		{"missing@email.com", "1234", UnsuccessfulCode, errors.IncorrectEmail, stdoutResponse(errors.IncorrectEmail)},
+		{"valid@email.com", "wrong", UnsuccessfulCode, errata.ErrIncorrectPassword, stdoutResponse(errata.ErrIncorrectPassword)},
+		{"valid@email.com", "", InvalidCode, errata.ErrMissingValues, stdoutResponse(errata.ErrMissingValues)},
+		{"", "", InvalidCode, errata.ErrMissingValues, stdoutResponse(errata.ErrMissingValues)},
+		{"", "pass", InvalidCode, errata.ErrMissingValues, stdoutResponse(errata.ErrMissingValues)},
+		{"spam@email.com", "1234", BlockedCode, errata.ErrAccountBlockedSpam, stdoutResponse(errata.ErrAccountBlockedSpam)},
+		{"abuse@email.com", "1234", BlockedCode, errata.ErrAccountBlockedAbuse, stdoutResponse(errata.ErrAccountBlockedAbuse)},
+		{"abuse@email.com", "1234", BlockedCode, errata.ErrAccountBlockedAbuse, stdoutResponse(errata.ErrAccountBlockedAbuse)},
+		{"invalid.email", "1234", InvalidCode, errata.ErrInvalidEmail, stdoutResponse(errata.ErrInvalidEmail)},
+		{"missing@email.com", "1234", UnsuccessfulCode, errata.ErrIncorrectEmail, stdoutResponse(errata.ErrIncorrectEmail)},
 	}
 
 	for _, request := range requests {

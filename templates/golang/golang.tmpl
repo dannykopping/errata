@@ -9,9 +9,14 @@ type Error struct {
     Cause      string
     Categories []string
     Labels     map[string]string
-    Metadata   map[string]string
+    Interfaces interfaces
 
     inner error
+}
+
+type interfaces struct {
+    HTTPResponseCode int
+    ShellExitCode int
 }
 
 func (e Error) Wrap(err error) error {
@@ -35,26 +40,30 @@ func (e Error) Error() string {
     return e.Code
 }
 
-func (e Error) GetMeta(key string, def string) string {
-    if val, found := e.Metadata[key]; found {
-        return val
-    }
-
-    return def
-}
+const (
+{{ range $code, $error := .Errors -}}
+    Err{{ $code | constantize }} = "{{ $code }}"
+{{ end }}
+)
 
 {{ range $code, $error := .Errors -}}
-func {{ $code | constantize }}({{- template "params" $error.Definition -}}) Error {
+func New{{ $code | constantize }}({{- template "params" $error.Definition -}}) Error {
     return Error{
-        Code: "{{ $code }}",
+        Code: Err{{ $code | constantize }},
         Message: {{ template "msg" $error.Definition -}},
         Cause: "{{ or $error.Definition.cause "" }}",
         Categories: []string{ {{- template "args" input "values" $error.Definition.categories "quoted" true -}} },
         Labels: map[string]string{
             {{- template "map" input "values" $error.Definition.labels "quoted" true }}
         },
-        Metadata: map[string]string{
-            {{- template "map" input "values" $error.Definition.metadata "quoted" true }}
+        Interfaces: interfaces{
+            {{- if $error.Definition.interfaces.http_response_code -}}
+            HTTPResponseCode: {{ $error.Definition.interfaces.http_response_code }},
+            {{- end -}}
+
+            {{- if $error.Definition.interfaces.shell_exit_code -}}
+            ShellExitCode: {{ $error.Definition.interfaces.shell_exit_code -}},
+            {{- end -}}
         },
     }
 }

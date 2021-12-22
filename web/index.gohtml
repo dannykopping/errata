@@ -1,0 +1,25 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Errata</title>
+
+</head>
+
+<body>
+<table>
+  {{ range $code, $error := .Errors }}
+  <tr>
+    <td>{{ $code }}</td>
+    {{- with $error.Definition -}}
+    <td>{{ .message }}</td>
+    <td>{{ .cause }}</td>
+    {{- end -}}
+  </tr>
+  {{ end }}
+</table>
+</body>
+</html>

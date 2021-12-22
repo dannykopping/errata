@@ -17,14 +17,17 @@ errors:
     categories: [ parsing ]
     args:
       - path
-  code_gen_error:
-    message: Code generation failed
-    categories: [ codegen ]
+
   invalid_datasource:
     message: Configured datasource [%s] is invalid
     categories: [ init ]
     args:
       - datasource
+
+  code_gen_error:
+    message: Code generation failed
+    categories: [ codegen ]
+
   template_not_found:
     message: Template path [%s] is incorrect or inaccessible
     categories: [ file ]
@@ -38,11 +41,12 @@ errors:
   template_syntax:
     message: Syntax error in template
     categories: [ codegen ]
-    metadata:
+    interfaces:
       shell_exit_code: 2
   template_execution:
     message: Error in template execution
     cause: Possible use of missing or renamed field
     categories: [ codegen ]
-    metadata:
+    interfaces:
+      http_response_code: 3
       shell_exit_code: 3

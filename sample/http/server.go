@@ -2,11 +2,10 @@ package http
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
-	"github.com/dannykopping/errata"
-	"github.com/dannykopping/errata/internal"
-	"github.com/dannykopping/errata/sample/errors"
+	"github.com/dannykopping/errata/sample/errata"
 	"github.com/dannykopping/errata/sample/login"
 	"github.com/gofiber/fiber/v2"
 )
@@ -19,7 +18,7 @@ func NewServer() *fiber.App {
 		var req login.Request
 
 		if err := c.BodyParser(&req); err != nil {
-			return errata.New(errors.InvalidRequest)
+			return errata.NewInvalidRequest().Wrap(err)
 		}
 
 		if err := login.Validate(req); err != nil {
@@ -35,14 +34,19 @@ func NewServer() *fiber.App {
 func errataMiddleware(c *fiber.Ctx) error {
 	err := c.Next()
 
-	if e, ok := err.(internal.Error); ok {
-		statusCode := e.HTTPStatusCode(fiber.StatusInternalServerError)
+	var e errata.Error
+	if err != nil && errors.As(err, &e) {
+		statusCode := e.Interfaces.HTTPResponseCode
+		if statusCode == 0 {
+			statusCode = fiber.StatusInternalServerError
+		}
+
 		c.Response().Header.Add("X-Errata-Code", e.Code)
 
 		body, err := formatError(e)
 		if err != nil {
-			fmt.Printf("formatting error: %q\n", err)
-			return fiber.NewError(fiber.StatusInternalServerError, errors.ResponseFormattingFailure)
+			e := err.(errata.Error)
+			return fiber.NewError(e.Interfaces.HTTPResponseCode, e.Message)
 		}
 
 		return fiber.NewError(statusCode, body)
@@ -51,7 +55,7 @@ func errataMiddleware(c *fiber.Ctx) error {
 	return err
 }
 
-func formatError(e internal.Error) (string, error) {
+func formatError(e errata.Error) (string, error) {
 	s := struct {
 		Code string `json:"code"`
 	}{
@@ -60,7 +64,7 @@ func formatError(e internal.Error) (string, error) {
 
 	r, err := json.Marshal(&s)
 	if err != nil {
-		return "", err
+		return "", errata.NewResponseFormatting().Wrap(err)
 	}
 
 	return string(r), nil

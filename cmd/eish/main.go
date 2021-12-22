@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/dannykopping/errata"
 	"github.com/urfave/cli/v2"
@@ -48,6 +47,32 @@ func main() {
 					return errata.Generate(codeGen)
 				},
 			},
+			{
+				Name:     "serve",
+				HideHelp: true,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:        "eds.file",
+						Required:    true,
+						Destination: &codeGen.File,
+					},
+					&cli.StringFlag{
+						Name:        "language",
+						Value:       "golang",
+						Destination: &codeGen.Lang,
+					},
+					&cli.StringFlag{
+						Name:        "package",
+						Value:       "errors",
+						Destination: &codeGen.Package,
+					},
+				},
+				Action: func(_ *cli.Context) error {
+
+					// TODO: don't use CodeGen type
+					return errata.Serve(codeGen)
+				},
+			},
 		},
 	}
 
@@ -57,8 +82,7 @@ func main() {
 
 		var e errata.Error
 		if errors.As(err, &e) {
-			code, err := strconv.Atoi(e.GetMeta("shell_exit_code", "1"))
-			if err == nil {
+			if code := e.Interfaces.ShellExitCode; code > 0 {
 				os.Exit(code)
 			}
 		}

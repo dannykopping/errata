@@ -1,66 +1,63 @@
 ---
 version: '0.1'
 
-errors:
+# common fields across similar errors
+templates:
   - &invalid_request
-    code: "invalid_request"
-    message: Request was invalid
-    cause: Form submission is invalid
-    categories: [ login, other_stuff ]
-    http:
-      status_code: 400
-    shell:
-      exit_code: 1
-    args:
-      - username
+    categories: [ login ]
+    interfaces:
+      http_response_code: 400
+      shell_exit_code: 1
 
   - &unsuccessful
-    code: "unsuccessful"
-    message: Login attempt was unsuccessful, please check given values
     categories: [ login ]
-    http:
-      status_code: 403
-    shell:
-      exit_code: 2
+    interfaces:
+      http_response_code: 403
+      shell_exit_code: 2
 
   - &blocked
-    code: "blocked"
-    message: Account is blocked, please contact support
-    categories: [ login, blerp ]
-    http:
-      status_code: 403
-    shell:
-      exit_code: 3
+    categories: [ login ]
+    interfaces:
+      http_response_code: 403
+      shell_exit_code: 3
 
-  - <<: *invalid_request
-    code: "missing_values"
+  - &internal_http
+    categories: [ internal ]
+    interfaces:
+      http_response_code: 500
+
+errors:
+  # invalid request errors
+  missing_values:
+    <<: *invalid_request
     message: One or more values are missing
     cause: Form submission was missing required fields
-
-  - <<: *invalid_request
-    code: "invalid_email"
+  invalid_request:
+    <<: *invalid_request
+    message: One or more values are missing
+    cause: Form submission was missing required fields
+  invalid_email:
+    <<: *invalid_request
     message: Please provide a valid email address
     cause: Given email address is invalid
 
-  - <<: *unsuccessful
-    code: "incorrect_email"
+  # unsuccessful errors
+  incorrect_email:
+    <<: *unsuccessful
     message: Given email address is incorrect
-
-  - <<: *unsuccessful
-    code: "incorrect_password"
+  incorrect_password:
+    <<: *unsuccessful
     message: Given password is incorrect
 
-  - <<: *blocked
-    code: "account_blocked_spam"
+  # blocked errors
+  account_blocked_spam:
+    <<: *blocked
     message: Account is blocked because of spam
+  account_blocked_abuse:
+    <<: *blocked
+    message: Account is blocked because of abuse
 
-  - <<: *blocked
-    code: "account_blocked_abuse"
-    message: Account is blocked because of abuse %s %v %v
-    args:
-      - reason
-      - accountBalance
-      - empty
-    labels:
-      bob: "McGuiness"
-      harry: "McNab"
+  # response errors
+  response_formatting:
+    <<: *internal_http
+    message: Failed to format response body

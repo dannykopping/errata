@@ -9,9 +9,14 @@ type Error struct {
 	Cause      string
 	Categories []string
 	Labels     map[string]string
-	Metadata   map[string]string
+	Interfaces interfaces
 
 	inner error
+}
+
+type interfaces struct {
+	HTTPResponseCode int
+	ShellExitCode    int
 }
 
 func (e Error) Wrap(err error) error {
@@ -35,14 +40,6 @@ func (e Error) Error() string {
 	return e.Code
 }
 
-func (e Error) GetMeta(key string, def string) string {
-	if val, found := e.Metadata[key]; found {
-		return val
-	}
-
-	return def
-}
-
 func CodeGenError() Error {
 	return Error{
 		Code:       "code_gen_error",
@@ -50,7 +47,7 @@ func CodeGenError() Error {
 		Cause:      "",
 		Categories: []string{"codegen"},
 		Labels:     map[string]string{},
-		Metadata:   map[string]string{},
+		Interfaces: interfaces{},
 	}
 }
 
@@ -61,7 +58,7 @@ func FileNotFound(path interface{}) Error {
 		Cause:      "",
 		Categories: []string{"file"},
 		Labels:     map[string]string{},
-		Metadata:   map[string]string{},
+		Interfaces: interfaces{},
 	}
 }
 
@@ -72,7 +69,7 @@ func FileNotReadable(path interface{}) Error {
 		Cause:      "",
 		Categories: []string{"file"},
 		Labels:     map[string]string{},
-		Metadata:   map[string]string{},
+		Interfaces: interfaces{},
 	}
 }
 
@@ -83,7 +80,7 @@ func InvalidDatasource(datasource interface{}) Error {
 		Cause:      "",
 		Categories: []string{"init"},
 		Labels:     map[string]string{},
-		Metadata:   map[string]string{},
+		Interfaces: interfaces{},
 	}
 }
 
@@ -94,7 +91,7 @@ func SyntaxError(path interface{}) Error {
 		Cause:      "",
 		Categories: []string{"parsing"},
 		Labels:     map[string]string{},
-		Metadata:   map[string]string{},
+		Interfaces: interfaces{},
 	}
 }
 
@@ -105,9 +102,7 @@ func TemplateExecution() Error {
 		Cause:      "Possible use of missing or renamed field",
 		Categories: []string{"codegen"},
 		Labels:     map[string]string{},
-		Metadata: map[string]string{
-			"shell_exit_code": "3",
-		},
+		Interfaces: interfaces{HTTPResponseCode: 3, ShellExitCode: 3},
 	}
 }
 
@@ -118,7 +113,7 @@ func TemplateNotFound(path interface{}) Error {
 		Cause:      "",
 		Categories: []string{"file"},
 		Labels:     map[string]string{},
-		Metadata:   map[string]string{},
+		Interfaces: interfaces{},
 	}
 }
 
@@ -129,7 +124,7 @@ func TemplateNotReadable(path interface{}) Error {
 		Cause:      "",
 		Categories: []string{"file"},
 		Labels:     map[string]string{},
-		Metadata:   map[string]string{},
+		Interfaces: interfaces{},
 	}
 }
 
@@ -140,8 +135,6 @@ func TemplateSyntax() Error {
 		Cause:      "",
 		Categories: []string{"codegen"},
 		Labels:     map[string]string{},
-		Metadata: map[string]string{
-			"shell_exit_code": "2",
-		},
+		Interfaces: interfaces{ShellExitCode: 2},
 	}
 }

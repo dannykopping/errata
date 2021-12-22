@@ -4,21 +4,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/dannykopping/errata"
 	"github.com/dannykopping/errata/sample/http"
 	"github.com/dannykopping/errata/sample/shell"
 )
 
 func main() {
-	ds, err := errata.NewFileDatasource("errata.yml")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if err := errata.RegisterDataSource(ds); err != nil {
-		log.Fatal(err)
-	}
-
 	if len(os.Args) <= 1 {
 		showHelp()
 	}
@@ -28,7 +18,7 @@ func main() {
 	case "http":
 		log.Fatal(runHTTP())
 	case "shell":
-		runShell()
+		log.Fatal(runShell())
 	default:
 		showHelp()
 	}

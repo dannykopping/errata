@@ -1,9 +1,10 @@
 package shell
 
 import (
+	"errors"
 	"fmt"
 
-	"github.com/dannykopping/errata/internal"
+	"github.com/dannykopping/errata/sample/errata"
 	"github.com/dannykopping/errata/sample/login"
 	"github.com/urfave/cli/v2"
 )
@@ -17,6 +18,8 @@ const (
 	InvalidCode      = 1
 	UnsuccessfulCode = 2
 	BlockedCode      = 3
+
+	UnhandledErrorCode = 127
 )
 
 func NewApp() *cli.App {
@@ -46,14 +49,23 @@ func usageText() string {
 	return fmt.Sprintf(`possible exit codes:
 		%d: invalid
 		%d: unsuccessful
-		%d: blocked`, InvalidCode, UnsuccessfulCode, BlockedCode)
+		%d: blocked
+		%d: unhandled`, InvalidCode, UnsuccessfulCode, BlockedCode, UnhandledErrorCode)
 }
 
-func loginAction(c *cli.Context) error {
-	err, ok := login.Validate(request).(internal.Error)
-	if !ok {
-		return cli.Exit(fmt.Sprintf("Logged in successfully as: %s", request.EmailAddress), SuccessCode)
+func loginAction(_ *cli.Context) error {
+	// attempt login
+	err := login.Validate(request)
+
+	if err != nil {
+		var e errata.Error
+		if errors.As(err, &e) {
+			return cli.Exit(fmt.Sprintf("%s: %q", e.Code, e.Message), e.Interfaces.ShellExitCode)
+		}
+
+		return cli.Exit(fmt.Sprintf("unhandled error: %s", e), UnhandledErrorCode)
+
 	}
 
-	return cli.Exit(fmt.Sprintf("%s: %q", err.Code, err.Message), err.ShellExitCode(1))
+	return cli.Exit(fmt.Sprintf("Logged in successfully as: %s", request.EmailAddress), SuccessCode)
 }
