@@ -3,9 +3,9 @@ package errata
 import (
 	"embed"
 	"fmt"
-	"os"
-	"text/template"
+	"io"
 
+	"github.com/flosch/pongo2/v5"
 	"github.com/iancoleman/strcase"
 )
 
@@ -25,7 +25,7 @@ type CodeGen struct {
 	Package string
 }
 
-func Generate(data CodeGen) error {
+func Generate(data CodeGen, w io.Writer) error {
 	source, err := NewFileDatasource(data.File)
 	if err != nil {
 		return err
@@ -37,51 +37,28 @@ func Generate(data CodeGen) error {
 	file := fmt.Sprintf("%s.tmpl", data.Lang)
 	path := fmt.Sprintf("templates/%s/%s", data.Lang, file)
 
-	tmplData := Tmpl{
-		Package: data.Package,
-		Errors:  source.List(),
+	tmplData := pongo2.Context{
+		"Package": data.Package,
+		"Errors":  source.List(),
 	}
 
 	_, err = templates.Open(path)
 	if err != nil {
-		return NewTemplateNotFound(err, path)
+		return NewTemplateNotFound(err)
 	}
 
-	tmpl, err := template.New(file).
-		Funcs(template.FuncMap{
-			"constantize": strcase.ToCamel,
-			"hasNext": func(index int, len int) bool {
-				return index+1 < len
-			},
-			// credit: https://stackoverflow.com/a/18276968
-			"input": func(in ...interface{}) (map[string]interface{}, error) {
-				if len(in)%2 != 0 {
-					return nil, fmt.Errorf("uneven set of parameter pairs")
-				}
+	pongo2.RegisterFilter("constantize", func(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, err *pongo2.Error) {
+		return pongo2.AsValue(strcase.ToCamel(in.String())), nil
+	})
 
-				var out = make(map[string]interface{}, len(in)/2)
-				for i := 0; i < len(in); i += 2 {
-					key, ok := in[i].(string)
-					if !ok {
-						return nil, fmt.Errorf("keys must be strings")
-					}
-					out[key] = in[i+1]
-				}
+	pongo2.SetAutoescape(false)
 
-				return out, nil
-			},
-			"debug": func(val interface{}) string {
-				return ""
-			},
-		}).
-		ParseFS(templates, "templates/**/*")
-
+	tmpl, err := pongo2.FromFile(path)
 	if err != nil {
 		return NewTemplateSyntax(err)
 	}
 
-	err = tmpl.Execute(os.Stdout, tmplData)
-	if err != nil {
+	if err := tmpl.ExecuteWriter(tmplData, w); err != nil {
 		return NewTemplateExecution(err)
 	}
 

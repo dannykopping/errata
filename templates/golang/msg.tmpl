@@ -1,9 +1,0 @@
-{{ define "msg" }}
-{{- $msg := or .message "<no message defined>" -}}
-
-{{- if .args -}}
-fmt.Sprintf("{{- $msg -}}", {{ template "args" input "values" .args -}})
-{{- else -}}
-"{{- $msg -}}"
-{{- end -}}
-{{ end }}

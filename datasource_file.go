@@ -48,17 +48,17 @@ func (e *fileDatasource) UnmarshalYAML(unmarshal func(interface{}) error) error 
 
 func NewFileDatasource(path string) (DataSource, error) {
 	if _, err := os.Stat(path); err != nil {
-		return nil, NewFileNotFound(err, path)
+		return nil, NewFileNotFound(err)
 	}
 
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, NewFileNotReadable(err, path)
+		return nil, NewFileNotReadable(err)
 	}
 
 	db, err := parse(f)
 	if err != nil {
-		return nil, NewSyntaxError(err, path)
+		return nil, NewSyntaxError(err)
 	}
 
 	return db, nil
