@@ -2,8 +2,8 @@ package errata
 
 import (
 	"embed"
-	"os"
-	"text/template"
+	"html/template"
+	"net/http"
 )
 
 var (
@@ -11,14 +11,20 @@ var (
 	web embed.FS
 )
 
-func Serve(data CodeGen) error {
-	source, err := NewFileDatasource(data.File)
+type Server struct {
+	File    string
+	Package string
+}
+
+func (s *Server) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
+	source, err := NewFileDatasource(s.File)
 	if err != nil {
-		return err
+		s.errorHandler(err, w)
+		return
 	}
 
 	tmplData := Tmpl{
-		Package: data.Package,
+		Package: s.Package,
 		Errors:  source.List(),
 	}
 
@@ -26,13 +32,22 @@ func Serve(data CodeGen) error {
 		ParseFS(web, "web/*")
 
 	if err != nil {
-		return NewTemplateSyntax(err)
+		s.errorHandler(NewTemplateSyntax(err), w)
+		return
 	}
 
-	err = tmpl.Execute(os.Stdout, tmplData)
+	err = tmpl.Execute(w, tmplData)
 	if err != nil {
-		return NewTemplateExecution(err)
+		s.errorHandler(NewTemplateExecution(err), w)
+		return
 	}
+}
 
-	return nil
+func (s *Server) errorHandler(err error, w http.ResponseWriter) {
+	w.WriteHeader(http.StatusInternalServerError)
+	w.Write([]byte(err.Error()))
+}
+
+func Serve(srv *Server) error {
+	return http.ListenAndServe("localhost:8080", srv)
 }
