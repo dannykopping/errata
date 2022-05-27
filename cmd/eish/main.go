@@ -44,7 +44,7 @@ func main() {
 					},
 				},
 				Action: func(_ *cli.Context) error {
-					return errata.Generate(codeGen)
+					return errata.Generate(codeGen, os.Stdout)
 				},
 			},
 			{

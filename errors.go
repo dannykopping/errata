@@ -51,55 +51,53 @@ func NewCodeGenError(inner error) Error {
 		Cause:      "",
 		Categories: []string{"codegen"},
 		Labels:     map[string]string{},
-		Interfaces: interfaces{},
 	}
 }
 
-func NewFileNotFound(inner error, path interface{}) Error {
+func NewFileNotFound(inner error) Error {
 	return Error{
 		inner:      inner,
 		Code:       ErrFileNotFound,
-		Message:    fmt.Sprintf("YML file [%s] is incorrect or inaccessible", path),
+		Message:    "YML file is incorrect or inaccessible",
 		Cause:      "",
 		Categories: []string{"file"},
 		Labels:     map[string]string{},
-		Interfaces: interfaces{},
 	}
 }
 
-func NewFileNotReadable(inner error, path interface{}) Error {
+func NewFileNotReadable(inner error) Error {
 	return Error{
 		inner:      inner,
 		Code:       ErrFileNotReadable,
-		Message:    fmt.Sprintf("YML file [%s] is unreadable", path),
+		Message:    "YML file is unreadable",
 		Cause:      "",
 		Categories: []string{"file"},
-		Labels:     map[string]string{},
-		Interfaces: interfaces{},
+		Labels: map[string]string{
+			"unrecoverable": "false",
+			"recoverable":   "true",
+		},
 	}
 }
 
-func NewInvalidDatasource(inner error, datasource interface{}) Error {
+func NewInvalidDatasource(inner error) Error {
 	return Error{
 		inner:      inner,
 		Code:       ErrInvalidDatasource,
-		Message:    fmt.Sprintf("Configured datasource [%s] is invalid", datasource),
+		Message:    "Configured datasource is invalid",
 		Cause:      "",
 		Categories: []string{"init"},
 		Labels:     map[string]string{},
-		Interfaces: interfaces{},
 	}
 }
 
-func NewSyntaxError(inner error, path interface{}) Error {
+func NewSyntaxError(inner error) Error {
 	return Error{
 		inner:      inner,
 		Code:       ErrSyntaxError,
-		Message:    fmt.Sprintf("YML file [%s] is malformed", path),
+		Message:    "YML file is malformed",
 		Cause:      "",
 		Categories: []string{"parsing"},
 		Labels:     map[string]string{},
-		Interfaces: interfaces{},
 	}
 }
 
@@ -111,31 +109,28 @@ func NewTemplateExecution(inner error) Error {
 		Cause:      "Possible use of missing or renamed field",
 		Categories: []string{"codegen"},
 		Labels:     map[string]string{},
-		Interfaces: interfaces{HTTPResponseCode: 300, ShellExitCode: 3},
 	}
 }
 
-func NewTemplateNotFound(inner error, path interface{}) Error {
+func NewTemplateNotFound(inner error) Error {
 	return Error{
 		inner:      inner,
 		Code:       ErrTemplateNotFound,
-		Message:    fmt.Sprintf("Template path [%s] is incorrect or inaccessible", path),
+		Message:    "Template path is incorrect or inaccessible",
 		Cause:      "",
 		Categories: []string{"file"},
 		Labels:     map[string]string{},
-		Interfaces: interfaces{},
 	}
 }
 
-func NewTemplateNotReadable(inner error, path interface{}) Error {
+func NewTemplateNotReadable(inner error) Error {
 	return Error{
 		inner:      inner,
 		Code:       ErrTemplateNotReadable,
-		Message:    fmt.Sprintf("Template path [%s] is unreadable", path),
+		Message:    "Template path is unreadable",
 		Cause:      "",
 		Categories: []string{"file"},
 		Labels:     map[string]string{},
-		Interfaces: interfaces{},
 	}
 }
 
@@ -147,6 +142,5 @@ func NewTemplateSyntax(inner error) Error {
 		Cause:      "",
 		Categories: []string{"codegen"},
 		Labels:     map[string]string{},
-		Interfaces: interfaces{ShellExitCode: 2},
 	}
 }
