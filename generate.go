@@ -44,7 +44,7 @@ func Generate(data CodeGen) error {
 
 	_, err = templates.Open(path)
 	if err != nil {
-		return TemplateNotFound(path).Wrap(err)
+		return NewTemplateNotFound(err, path)
 	}
 
 	tmpl, err := template.New(file).
@@ -77,10 +77,13 @@ func Generate(data CodeGen) error {
 		ParseFS(templates, "templates/**/*")
 
 	if err != nil {
-		return TemplateSyntax().Wrap(err)
+		return NewTemplateSyntax(err)
 	}
 
-	return TemplateExecution().Wrap(
-		tmpl.Execute(os.Stdout, tmplData),
-	)
+	err = tmpl.Execute(os.Stdout, tmplData)
+	if err != nil {
+		return NewTemplateExecution(err)
+	}
+
+	return nil
 }
