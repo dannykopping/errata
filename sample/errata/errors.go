@@ -130,8 +130,8 @@ var list = map[string]Error{
 		Solution:   "",
 		Categories: []string{"login"},
 		Labels: map[string]string{
-			"http_response_code": "400",
 			"shell_exit_code":    "1",
+			"http_response_code": "400",
 		},
 
 		translations: map[string]Error{},
@@ -185,34 +185,34 @@ func NewFromCode(code string, wrapped error) Error {
 	return err
 }
 
-func NewAccountBlockedAbuse(wrapped error) Error {
+func NewAccountBlockedAbuseErr(wrapped error) Error {
 	return NewFromCode(ErrAccountBlockedAbuse, wrapped)
 }
 
-func NewAccountBlockedSpam(wrapped error) Error {
+func NewAccountBlockedSpamErr(wrapped error) Error {
 	return NewFromCode(ErrAccountBlockedSpam, wrapped)
 }
 
-func NewIncorrectEmail(wrapped error) Error {
+func NewIncorrectEmailErr(wrapped error) Error {
 	return NewFromCode(ErrIncorrectEmail, wrapped)
 }
 
-func NewIncorrectPassword(wrapped error) Error {
+func NewIncorrectPasswordErr(wrapped error) Error {
 	return NewFromCode(ErrIncorrectPassword, wrapped)
 }
 
-func NewInvalidEmail(wrapped error) Error {
+func NewInvalidEmailErr(wrapped error) Error {
 	return NewFromCode(ErrInvalidEmail, wrapped)
 }
 
-func NewInvalidRequest(wrapped error) Error {
+func NewInvalidRequestErr(wrapped error) Error {
 	return NewFromCode(ErrInvalidRequest, wrapped)
 }
 
-func NewMissingValues(wrapped error) Error {
+func NewMissingValuesErr(wrapped error) Error {
 	return NewFromCode(ErrMissingValues, wrapped)
 }
 
-func NewResponseFormatting(wrapped error) Error {
+func NewResponseFormattingErr(wrapped error) Error {
 	return NewFromCode(ErrResponseFormatting, wrapped)
 }

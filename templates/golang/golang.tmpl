@@ -69,7 +69,7 @@ const (
 {% endmacro %}
 
 {% macro quote_map(items) %}
-  {%- for key, item in items %}
+  {%- for key, item in items sorted %}
     {{ key | stringformat:"%q" -}}: "{{- item | stringformat:"%v" -}}",
   {%- endfor %}
 {% endmacro %}
@@ -85,8 +85,8 @@ var list = map[string]Error{
       Labels: map[string]string{ {{ quote_map(error.Definition.labels) }} },
 
       translations: map[string]Error{
-        {%- for locale, x in I18n sorted %}
-        {%- for i18n_code, err in x sorted %}
+        {%- for locale, errs in I18n sorted %}
+        {%- for i18n_code, err in errs sorted %}
         {%- if i18n_code == code %}
         "{{ locale }}": {
           Message: "{{ err.Definition.message -}}",
@@ -108,7 +108,7 @@ func NewFromCode(code string, wrapped error) Error {
 }
 
 {% for code, error in Errors sorted %}
-func New{{ code | constantize }}(wrapped error) Error {
+func New{{ code | constantize }}Err(wrapped error) Error {
   return NewFromCode(Err{{ code | constantize }}, wrapped)
 }
 {% endfor -%}

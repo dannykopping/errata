@@ -56,7 +56,7 @@ func Generate(data CodeGen, w io.Writer) error {
 
 	_, err = templates.Open(path)
 	if err != nil {
-		return NewTemplateNotFound(err)
+		return NewTemplateNotFoundErr(err)
 	}
 
 	pongo2.RegisterFilter("constantize", func(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, err *pongo2.Error) {
@@ -67,11 +67,11 @@ func Generate(data CodeGen, w io.Writer) error {
 
 	tmpl, err := pongo2.FromFile(path)
 	if err != nil {
-		return NewTemplateSyntax(err)
+		return NewTemplateSyntaxErr(err)
 	}
 
 	if err := tmpl.ExecuteWriter(tmplData, w); err != nil {
-		return NewTemplateExecution(err)
+		return NewTemplateExecutionErr(err)
 	}
 
 	return nil
@@ -86,10 +86,10 @@ func buildI18nMap(data CodeGen) (map[string]map[string]ErrorDefinition, error) {
 
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, NewFileNotFound(err)
+			return nil, NewFileNotFoundErr(err)
 		}
 
-		return nil, NewInvalidDatasource(err)
+		return nil, NewInvalidDatasourceErr(err)
 	}
 
 	err = filepath.WalkDir(data.I18nDir, func(path string, d fs.DirEntry, err error) error {
@@ -113,7 +113,7 @@ func buildI18nMap(data CodeGen) (map[string]map[string]ErrorDefinition, error) {
 	})
 
 	if err != nil {
-		return nil, NewInvalidDatasource(err)
+		return nil, NewInvalidDatasourceErr(err)
 	}
 
 	return m, nil

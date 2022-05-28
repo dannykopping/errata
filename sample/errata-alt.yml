@@ -1,61 +1,63 @@
 ---
 version: '0.1'
 
-errors:
-  # invalid request errors
-  missing_values:
-    message: One or more values are missing
-    cause: Form submission was missing required fields
-    categories: [ login ]
-    labels:
-      http_response_code: 400
-      shell_exit_code: 1
-  invalid_request:
-    message: One or more values are missing
-    cause: Form submission was missing required fields
-    categories: [ login ]
-    labels:
-      http_response_code: 400
-      shell_exit_code: 1
-  invalid_email:
-    message: Please provide a valid email address
-    cause: Given email address is invalid
+# common fields across similar errors
+templates:
+  - &invalid_request
     categories: [ login ]
     labels:
       http_response_code: 400
       shell_exit_code: 1
 
-  # unsuccessful errors
-  incorrect_email:
-    message: Given email address is incorrect
-    categories: [ login ]
-    labels:
-      http_response_code: 403
-      shell_exit_code: 2
-  incorrect_password:
-    message: Given password is incorrect
+  - &unsuccessful
     categories: [ login ]
     labels:
       http_response_code: 403
       shell_exit_code: 2
 
-  # blocked errors
-  account_blocked_spam:
-    message: Account is blocked because of spam
-    categories: [ login ]
-    labels:
-      http_response_code: 403
-      shell_exit_code: 3
-  account_blocked_abuse:
-    message: Account is blocked because of abuse
+  - &blocked
     categories: [ login ]
     labels:
       http_response_code: 403
       shell_exit_code: 3
 
-  # response errors
-  response_formatting:
-    message: Failed to format response body
+  - &internal_http
     categories: [ internal ]
     labels:
       http_response_code: 500
+
+errors:
+  # invalid request errors
+  missing_values:
+    <<: *invalid_request
+    message: One or more values are missing
+    cause: Form submission was missing required fields
+  invalid_request:
+    <<: *invalid_request
+    message: One or more values are missing
+    cause: Form submission was missing required fields
+  invalid_email:
+    <<: *invalid_request
+    message: Please provide a valid email address
+    cause: Given email address is invalid
+
+  # unsuccessful errors
+  incorrect_email:
+    <<: *unsuccessful
+    message: Given email address is incorrect
+  incorrect_password:
+    <<: *unsuccessful
+    message: Given password is incorrect
+
+  # blocked errors
+  account_blocked_spam:
+    <<: *blocked
+    message: Account is blocked because of spam
+  account_blocked_abuse:
+    <<: *blocked
+    message: Account is blocked because of abuse
+
+  # response errors
+  response_formatting:
+    <<: *internal_http
+    message: Failed to format response body

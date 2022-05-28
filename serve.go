@@ -32,13 +32,13 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 		ParseFS(web, "web/*")
 
 	if err != nil {
-		s.errorHandler(NewTemplateSyntax(err), w)
+		s.errorHandler(NewTemplateSyntaxErr(err), w)
 		return
 	}
 
 	err = tmpl.Execute(w, tmplData)
 	if err != nil {
-		s.errorHandler(NewTemplateExecution(err), w)
+		s.errorHandler(NewTemplateExecutionErr(err), w)
 		return
 	}
 }

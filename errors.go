@@ -60,7 +60,7 @@ const (
 	ErrFileNotFound        = "file_not_found"
 	ErrFileNotReadable     = "file_not_readable"
 	ErrInvalidDatasource   = "invalid_datasource"
-	ErrSyntaxError         = "syntax_error"
+	ErrInvalidSyntax       = "invalid_syntax"
 	ErrTemplateExecution   = "template_execution"
 	ErrTemplateNotFound    = "template_not_found"
 	ErrTemplateNotReadable = "template_not_readable"
@@ -73,7 +73,7 @@ var list = map[string]Error{
 		Message:    "Code generation failed",
 		Cause:      "",
 		Solution:   "",
-		Categories: []string{},
+		Categories: []string{"codegen"},
 		Labels:     map[string]string{},
 
 		translations: map[string]Error{},
@@ -84,7 +84,7 @@ var list = map[string]Error{
 		Message:    "YML file is incorrect or inaccessible",
 		Cause:      "",
 		Solution:   "Ensure the given file exists and can be read by errata",
-		Categories: []string{},
+		Categories: []string{"file"},
 		Labels:     map[string]string{},
 
 		translations: map[string]Error{
@@ -107,7 +107,7 @@ var list = map[string]Error{
 		Message:    "YML file is unreadable",
 		Cause:      "",
 		Solution:   "Ensure the given file can be read by errata",
-		Categories: []string{},
+		Categories: []string{"file"},
 		Labels:     map[string]string{},
 
 		translations: map[string]Error{},
@@ -118,18 +118,18 @@ var list = map[string]Error{
 		Message:    "Configured datasource is invalid",
 		Cause:      "",
 		Solution:   "",
-		Categories: []string{},
+		Categories: []string{"init"},
 		Labels:     map[string]string{},
 
 		translations: map[string]Error{},
 	},
 
-	ErrSyntaxError: {
-		Code:       ErrSyntaxError,
+	ErrInvalidSyntax: {
+		Code:       ErrInvalidSyntax,
 		Message:    "YML file is malformed",
 		Cause:      "",
 		Solution:   "Check the YML file for syntax errors",
-		Categories: []string{},
+		Categories: []string{"parsing"},
 		Labels:     map[string]string{},
 
 		translations: map[string]Error{},
@@ -140,7 +140,7 @@ var list = map[string]Error{
 		Message:    "Error in template execution",
 		Cause:      "Possible use of missing or renamed field",
 		Solution:   "",
-		Categories: []string{},
+		Categories: []string{"codegen"},
 		Labels:     map[string]string{},
 
 		translations: map[string]Error{},
@@ -151,7 +151,7 @@ var list = map[string]Error{
 		Message:    "Template path is incorrect or inaccessible",
 		Cause:      "",
 		Solution:   "",
-		Categories: []string{},
+		Categories: []string{"file"},
 		Labels:     map[string]string{},
 
 		translations: map[string]Error{},
@@ -162,7 +162,7 @@ var list = map[string]Error{
 		Message:    "Template path is unreadable",
 		Cause:      "",
 		Solution:   "",
-		Categories: []string{},
+		Categories: []string{"file"},
 		Labels:     map[string]string{},
 
 		translations: map[string]Error{},
@@ -173,7 +173,7 @@ var list = map[string]Error{
 		Message:    "Syntax error in template",
 		Cause:      "",
 		Solution:   "",
-		Categories: []string{},
+		Categories: []string{"codegen"},
 		Labels:     map[string]string{},
 
 		translations: map[string]Error{},
@@ -186,38 +186,38 @@ func NewFromCode(code string, wrapped error) Error {
 	return err
 }
 
-func NewCodeGenError(wrapped error) Error {
+func NewCodeGenErrorErr(wrapped error) Error {
 	return NewFromCode(ErrCodeGenError, wrapped)
 }
 
-func NewFileNotFound(wrapped error) Error {
+func NewFileNotFoundErr(wrapped error) Error {
 	return NewFromCode(ErrFileNotFound, wrapped)
 }
 
-func NewFileNotReadable(wrapped error) Error {
+func NewFileNotReadableErr(wrapped error) Error {
 	return NewFromCode(ErrFileNotReadable, wrapped)
 }
 
-func NewInvalidDatasource(wrapped error) Error {
+func NewInvalidDatasourceErr(wrapped error) Error {
 	return NewFromCode(ErrInvalidDatasource, wrapped)
 }
 
-func NewSyntaxError(wrapped error) Error {
-	return NewFromCode(ErrSyntaxError, wrapped)
+func NewInvalidSyntaxErr(wrapped error) Error {
+	return NewFromCode(ErrInvalidSyntax, wrapped)
 }
 
-func NewTemplateExecution(wrapped error) Error {
+func NewTemplateExecutionErr(wrapped error) Error {
 	return NewFromCode(ErrTemplateExecution, wrapped)
 }
 
-func NewTemplateNotFound(wrapped error) Error {
+func NewTemplateNotFoundErr(wrapped error) Error {
 	return NewFromCode(ErrTemplateNotFound, wrapped)
 }
 
-func NewTemplateNotReadable(wrapped error) Error {
+func NewTemplateNotReadableErr(wrapped error) Error {
 	return NewFromCode(ErrTemplateNotReadable, wrapped)
 }
 
-func NewTemplateSyntax(wrapped error) Error {
+func NewTemplateSyntaxErr(wrapped error) Error {
 	return NewFromCode(ErrTemplateSyntax, wrapped)
 }

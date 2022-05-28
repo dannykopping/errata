@@ -14,24 +14,24 @@ type Request struct {
 // Validate given request against database, returning error if present
 func Validate(req Request) error {
 	if req.EmailAddress == "" || req.Password == "" {
-		return errata.NewMissingValues(nil)
+		return errata.NewMissingValuesErr(nil)
 	}
 
 	if strings.Index(req.EmailAddress, "@") < 0 {
-		return errata.NewInvalidEmail(nil)
+		return errata.NewInvalidEmailErr(nil)
 	}
 
 	switch req.EmailAddress {
 	case "spam@email.com":
-		return errata.NewAccountBlockedSpam(nil)
+		return errata.NewAccountBlockedSpamErr(nil)
 	case "abuse@email.com":
-		return errata.NewAccountBlockedAbuse(nil)
+		return errata.NewAccountBlockedAbuseErr(nil)
 	case "valid@email.com":
 		if req.Password != "password" {
-			return errata.NewIncorrectPassword(nil)
+			return errata.NewIncorrectPasswordErr(nil)
 		}
 		return nil
 	}
 
-	return errata.NewIncorrectEmail(nil)
+	return errata.NewIncorrectEmailErr(nil)
 }

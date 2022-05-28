@@ -11,7 +11,7 @@ errors:
     categories: [ file ]
     solution: Ensure the given file can be read by errata
 
-  syntax_error:
+  invalid_syntax:
     message: YML file is malformed
     categories: [ parsing ]
     solution: Check the YML file for syntax errors

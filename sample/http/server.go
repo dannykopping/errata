@@ -19,7 +19,7 @@ func NewServer() *fiber.App {
 		var req login.Request
 
 		if err := c.BodyParser(&req); err != nil {
-			return errata.NewInvalidRequest(err)
+			return errata.NewInvalidRequestErr(err)
 		}
 
 		if err := login.Validate(req); err != nil {
@@ -37,10 +37,7 @@ func errataMiddleware(c *fiber.Ctx) error {
 
 	var e errata.Error
 	if err != nil && errors.As(err, &e) {
-		var statusCode int
-
 		statusCode, ex := getHTTPStatusCode(e)
-
 		if ex != nil || statusCode <= 0 {
 			statusCode = fiber.StatusInternalServerError
 		}
@@ -68,7 +65,7 @@ func formatError(e errata.Error) (string, error) {
 
 	r, err := json.Marshal(&s)
 	if err != nil {
-		return "", errata.NewResponseFormatting(err)
+		return "", errata.NewResponseFormattingErr(err)
 	}
 
 	return string(r), nil
