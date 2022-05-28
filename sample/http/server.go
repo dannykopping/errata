@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/dannykopping/errata/sample/errata"
 	"github.com/dannykopping/errata/sample/login"
@@ -18,7 +19,7 @@ func NewServer() *fiber.App {
 		var req login.Request
 
 		if err := c.BodyParser(&req); err != nil {
-			return errata.NewInvalidRequest().Wrap(err)
+			return errata.NewInvalidRequest(err)
 		}
 
 		if err := login.Validate(req); err != nil {
@@ -36,8 +37,11 @@ func errataMiddleware(c *fiber.Ctx) error {
 
 	var e errata.Error
 	if err != nil && errors.As(err, &e) {
-		statusCode := e.Interfaces.HTTPResponseCode
-		if statusCode == 0 {
+		var statusCode int
+
+		statusCode, ex := getHTTPStatusCode(e)
+
+		if ex != nil || statusCode <= 0 {
 			statusCode = fiber.StatusInternalServerError
 		}
 
@@ -46,7 +50,7 @@ func errataMiddleware(c *fiber.Ctx) error {
 		body, err := formatError(e)
 		if err != nil {
 			e := err.(errata.Error)
-			return fiber.NewError(e.Interfaces.HTTPResponseCode, e.Message)
+			return fiber.NewError(statusCode, e.Message)
 		}
 
 		return fiber.NewError(statusCode, body)
@@ -64,8 +68,23 @@ func formatError(e errata.Error) (string, error) {
 
 	r, err := json.Marshal(&s)
 	if err != nil {
-		return "", errata.NewResponseFormatting().Wrap(err)
+		return "", errata.NewResponseFormatting(err)
 	}
 
 	return string(r), nil
+}
+
+func getHTTPStatusCode(err errata.Error) (int, error) {
+	c, ok := err.Labels["http_response_code"]
+	if ok {
+		code, e := strconv.Atoi(c)
+		if e != nil {
+			return 0, e
+		}
+
+		return code, nil
+	}
+
+	// no exit code defined
+	return 0, nil
 }

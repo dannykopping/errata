@@ -5,25 +5,25 @@ version: '0.1'
 templates:
   - &invalid_request
     categories: [ login ]
-    interfaces:
+    labels:
       http_response_code: 400
       shell_exit_code: 1
 
   - &unsuccessful
     categories: [ login ]
-    interfaces:
+    labels:
       http_response_code: 403
       shell_exit_code: 2
 
   - &blocked
     categories: [ login ]
-    interfaces:
+    labels:
       http_response_code: 403
       shell_exit_code: 3
 
   - &internal_http
     categories: [ internal ]
-    interfaces:
+    labels:
       http_response_code: 500
 
 errors:

@@ -7,13 +7,11 @@ import (
 
 	"github.com/dannykopping/errata/sample/errata"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/urfave/cli/v2"
 )
 
 func TestErrorResponses(t *testing.T) {
-	app, err := prepareShell(t)
-	assert.NoError(t, err)
+	app := NewApp()
 
 	requests := []struct {
 		email              string
@@ -22,7 +20,7 @@ func TestErrorResponses(t *testing.T) {
 		expectedErrataCode string
 		expectedStdout     string
 	}{
-		{"valid@email.com", "1234", SuccessCode, "", "Logged in successfully as: valid@email.com"},
+		{"valid@email.com", "password", SuccessCode, "", "Logged in successfully as: valid@email.com"},
 		{"valid@email.com", "wrong", UnsuccessfulCode, errata.ErrIncorrectPassword, stdoutResponse(errata.ErrIncorrectPassword)},
 		{"valid@email.com", "", InvalidCode, errata.ErrMissingValues, stdoutResponse(errata.ErrMissingValues)},
 		{"", "", InvalidCode, errata.ErrMissingValues, stdoutResponse(errata.ErrMissingValues)},
@@ -59,16 +57,6 @@ func TestErrorResponses(t *testing.T) {
 }
 
 func stdoutResponse(code string) string {
-	err := errata.New(code)
+	err := errata.NewFromCode(code, nil)
 	return fmt.Sprintf("%s: %q", err.Code, err.Message)
-}
-
-func prepareShell(t *testing.T) (*cli.App, error) {
-	db, err := errata.NewFileDatasource("../errata.yml")
-	require.NoError(t, err)
-
-	assert.NoError(t, errata.RegisterDataSource(db))
-
-	server := NewApp()
-	return server, nil
 }

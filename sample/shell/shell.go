@@ -3,6 +3,7 @@ package shell
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/dannykopping/errata/sample/errata"
 	"github.com/dannykopping/errata/sample/login"
@@ -60,7 +61,9 @@ func loginAction(_ *cli.Context) error {
 	if err != nil {
 		var e errata.Error
 		if errors.As(err, &e) {
-			return cli.Exit(fmt.Sprintf("%s: %q", e.Code, e.Message), e.Interfaces.ShellExitCode)
+			if code, ex := getShellExitCode(e); ex == nil && code >= 0 {
+				return cli.Exit(fmt.Sprintf("%s: %q", e.Code, e.Message), code)
+			}
 		}
 
 		return cli.Exit(fmt.Sprintf("unhandled error: %s", e), UnhandledErrorCode)
@@ -68,4 +71,19 @@ func loginAction(_ *cli.Context) error {
 	}
 
 	return cli.Exit(fmt.Sprintf("Logged in successfully as: %s", request.EmailAddress), SuccessCode)
+}
+
+func getShellExitCode(err errata.Error) (int, error) {
+	c, ok := err.Labels["shell_exit_code"]
+	if ok {
+		code, e := strconv.Atoi(c)
+		if e != nil {
+			return -1, e
+		}
+
+		return code, nil
+	}
+
+	// no exit code defined
+	return 0, nil
 }

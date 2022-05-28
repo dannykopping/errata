@@ -15,8 +15,7 @@ import (
 )
 
 func TestErrorResponses(t *testing.T) {
-	server, err := prepareServer(t)
-	require.NoError(t, err)
+	server := NewServer()
 
 	requests := []struct {
 		email              string
@@ -25,7 +24,7 @@ func TestErrorResponses(t *testing.T) {
 		expectedErrataCode string
 		expectedBody       string
 	}{
-		{"valid@email.com", "1234", fiber.StatusOK, "", "Logged in successfully as: valid@email.com"},
+		{"valid@email.com", "password", fiber.StatusOK, "", "Logged in successfully as: valid@email.com"},
 		{"valid@email.com", "wrong", fiber.StatusForbidden, errata.ErrIncorrectPassword, jsonBodyResponse(errata.ErrIncorrectPassword)},
 		{"valid@email.com", "", fiber.StatusBadRequest, errata.ErrMissingValues, jsonBodyResponse(errata.ErrMissingValues)},
 		{"", "", fiber.StatusBadRequest, errata.ErrMissingValues, jsonBodyResponse(errata.ErrMissingValues)},
@@ -65,14 +64,4 @@ func jsonBodyResponse(code string) string {
 
 	r, _ := json.Marshal(&val)
 	return string(r)
-}
-
-func prepareServer(t *testing.T) (*fiber.App, error) {
-	db, err := errata.NewFileDatasource("../errata.yml")
-	require.NoError(t, err)
-
-	assert.NoError(t, errata.RegisterDataSource(db))
-
-	server := NewServer()
-	return server, nil
 }
