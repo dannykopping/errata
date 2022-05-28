@@ -12,11 +12,11 @@ type Error struct {
   Labels     map[string]string
 
 	translations map[string]Error
-  inner error
+  wrapped error
 }
 
 func (e Error) Unwrap() error {
-  return e.inner
+  return e.wrapped
 }
 
 func (e Error) Error() string {
@@ -61,6 +61,19 @@ const (
 {%- endfor %}
 )
 
+{% macro quote_list(items) %}
+  {%- for item in items %}
+    {{- item | stringformat:"%q" -}}
+    {%- if not forloop.Last %}, {% endif -%}
+  {% endfor -%}
+{% endmacro %}
+
+{% macro quote_map(items) %}
+  {%- for key, item in items %}
+    {{ key | stringformat:"%q" -}}: "{{- item | stringformat:"%v" -}}",
+  {%- endfor %}
+{% endmacro %}
+
 var list = map[string]Error{
   {%- for code, error in Errors sorted %}
   Err{{ code | constantize }}: {
@@ -88,27 +101,14 @@ var list = map[string]Error{
   {% endfor %}
 }
 
-func clone(code string, inner error) Error {
+func NewFromCode(code string, wrapped error) Error {
   err := list[code]
-  err.inner = inner
+  err.wrapped = wrapped
   return err
 }
 
 {% for code, error in Errors sorted %}
-func New{{ code | constantize }}(inner error) Error {
-  return clone(Err{{ code | constantize }}, inner)
+func New{{ code | constantize }}(wrapped error) Error {
+  return NewFromCode(Err{{ code | constantize }}, wrapped)
 }
 {% endfor -%}
-
-{% macro quote_list(items) %}
-  {%- for item in items %}
-    {{- item | stringformat:"%q" -}}
-    {%- if not forloop.Last %}, {% endif -%}
-  {% endfor -%}
-{% endmacro %}
-
-{% macro quote_map(items) %}
-  {%- for key, item in items %}
-    {{ key | stringformat:"%q" -}}: "{{- item | stringformat:"%v" -}}",
-  {%- endfor %}
-{% endmacro %}

@@ -12,11 +12,11 @@ type Error struct {
 	Labels     map[string]string
 
 	translations map[string]Error
-	inner        error
+	wrapped      error
 }
 
 func (e Error) Unwrap() error {
-	return e.inner
+	return e.wrapped
 }
 
 func (e Error) Error() string {
@@ -180,44 +180,44 @@ var list = map[string]Error{
 	},
 }
 
-func clone(code string, inner error) Error {
+func NewFromCode(code string, wrapped error) Error {
 	err := list[code]
-	err.inner = inner
+	err.wrapped = wrapped
 	return err
 }
 
-func NewCodeGenError(inner error) Error {
-	return clone(ErrCodeGenError, inner)
+func NewCodeGenError(wrapped error) Error {
+	return NewFromCode(ErrCodeGenError, wrapped)
 }
 
-func NewFileNotFound(inner error) Error {
-	return clone(ErrFileNotFound, inner)
+func NewFileNotFound(wrapped error) Error {
+	return NewFromCode(ErrFileNotFound, wrapped)
 }
 
-func NewFileNotReadable(inner error) Error {
-	return clone(ErrFileNotReadable, inner)
+func NewFileNotReadable(wrapped error) Error {
+	return NewFromCode(ErrFileNotReadable, wrapped)
 }
 
-func NewInvalidDatasource(inner error) Error {
-	return clone(ErrInvalidDatasource, inner)
+func NewInvalidDatasource(wrapped error) Error {
+	return NewFromCode(ErrInvalidDatasource, wrapped)
 }
 
-func NewSyntaxError(inner error) Error {
-	return clone(ErrSyntaxError, inner)
+func NewSyntaxError(wrapped error) Error {
+	return NewFromCode(ErrSyntaxError, wrapped)
 }
 
-func NewTemplateExecution(inner error) Error {
-	return clone(ErrTemplateExecution, inner)
+func NewTemplateExecution(wrapped error) Error {
+	return NewFromCode(ErrTemplateExecution, wrapped)
 }
 
-func NewTemplateNotFound(inner error) Error {
-	return clone(ErrTemplateNotFound, inner)
+func NewTemplateNotFound(wrapped error) Error {
+	return NewFromCode(ErrTemplateNotFound, wrapped)
 }
 
-func NewTemplateNotReadable(inner error) Error {
-	return clone(ErrTemplateNotReadable, inner)
+func NewTemplateNotReadable(wrapped error) Error {
+	return NewFromCode(ErrTemplateNotReadable, wrapped)
 }
 
-func NewTemplateSyntax(inner error) Error {
-	return clone(ErrTemplateSyntax, inner)
+func NewTemplateSyntax(wrapped error) Error {
+	return NewFromCode(ErrTemplateSyntax, wrapped)
 }
