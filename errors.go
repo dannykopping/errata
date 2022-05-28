@@ -7,16 +7,12 @@ type Error struct {
 	Code       string
 	Message    string
 	Cause      string
+	Solution   string
 	Categories []string
 	Labels     map[string]string
-	Interfaces interfaces
 
-	inner error
-}
-
-type interfaces struct {
-	HTTPResponseCode int
-	ShellExitCode    int
+	translations map[string]Error
+	inner        error
 }
 
 func (e Error) Unwrap() error {
@@ -31,6 +27,34 @@ func (e Error) Error() string {
 	return e.Code
 }
 
+func (e Error) Translate(locale string) Error {
+	// if no translations are defined, return self
+	if e.translations == nil {
+		return e
+	}
+
+	tr, found := e.translations[locale]
+
+	// if no translations are defined, return self
+	if !found {
+		return e
+	}
+
+	// add untranslated fields
+	tr.Code = e.Code
+	tr.Labels = e.Labels
+	tr.Categories = e.Categories
+	return tr
+}
+
+func (e Error) Locales() (list []string) {
+	for locale := range e.translations {
+		list = append(list, locale)
+	}
+
+	return
+}
+
 const (
 	ErrCodeGenError        = "code_gen_error"
 	ErrFileNotFound        = "file_not_found"
@@ -43,104 +67,157 @@ const (
 	ErrTemplateSyntax      = "template_syntax"
 )
 
-func NewCodeGenError(inner error) Error {
-	return Error{
-		inner:      inner,
+var list = map[string]Error{
+	ErrCodeGenError: {
 		Code:       ErrCodeGenError,
 		Message:    "Code generation failed",
 		Cause:      "",
-		Categories: []string{"codegen"},
+		Solution:   "",
+		Categories: []string{},
 		Labels:     map[string]string{},
-	}
-}
 
-func NewFileNotFound(inner error) Error {
-	return Error{
-		inner:      inner,
+		translations: map[string]Error{},
+	},
+
+	ErrFileNotFound: {
 		Code:       ErrFileNotFound,
 		Message:    "YML file is incorrect or inaccessible",
 		Cause:      "",
-		Categories: []string{"file"},
+		Solution:   "Ensure the given file exists and can be read by errata",
+		Categories: []string{},
 		Labels:     map[string]string{},
-	}
-}
 
-func NewFileNotReadable(inner error) Error {
-	return Error{
-		inner:      inner,
+		translations: map[string]Error{
+			"af-za": {
+				Message:  "YML-lêer is verkeerd of ontoeganklik",
+				Cause:    "",
+				Solution: "Maak seker die gegewe lêer bestaan en kan deur errata gelees word",
+			},
+
+			"it-it": {
+				Message:  "Il file YML è errato o inaccessibile",
+				Cause:    "",
+				Solution: "Assicurati che il file specificato esista e possa essere letto da errata",
+			},
+		},
+	},
+
+	ErrFileNotReadable: {
 		Code:       ErrFileNotReadable,
 		Message:    "YML file is unreadable",
 		Cause:      "",
-		Categories: []string{"file"},
-		Labels: map[string]string{
-			"unrecoverable": "false",
-			"recoverable":   "true",
-		},
-	}
-}
+		Solution:   "Ensure the given file can be read by errata",
+		Categories: []string{},
+		Labels:     map[string]string{},
 
-func NewInvalidDatasource(inner error) Error {
-	return Error{
-		inner:      inner,
+		translations: map[string]Error{},
+	},
+
+	ErrInvalidDatasource: {
 		Code:       ErrInvalidDatasource,
 		Message:    "Configured datasource is invalid",
 		Cause:      "",
-		Categories: []string{"init"},
+		Solution:   "",
+		Categories: []string{},
 		Labels:     map[string]string{},
-	}
-}
 
-func NewSyntaxError(inner error) Error {
-	return Error{
-		inner:      inner,
+		translations: map[string]Error{},
+	},
+
+	ErrSyntaxError: {
 		Code:       ErrSyntaxError,
 		Message:    "YML file is malformed",
 		Cause:      "",
-		Categories: []string{"parsing"},
+		Solution:   "Check the YML file for syntax errors",
+		Categories: []string{},
 		Labels:     map[string]string{},
-	}
-}
 
-func NewTemplateExecution(inner error) Error {
-	return Error{
-		inner:      inner,
+		translations: map[string]Error{},
+	},
+
+	ErrTemplateExecution: {
 		Code:       ErrTemplateExecution,
 		Message:    "Error in template execution",
 		Cause:      "Possible use of missing or renamed field",
-		Categories: []string{"codegen"},
+		Solution:   "",
+		Categories: []string{},
 		Labels:     map[string]string{},
-	}
-}
 
-func NewTemplateNotFound(inner error) Error {
-	return Error{
-		inner:      inner,
+		translations: map[string]Error{},
+	},
+
+	ErrTemplateNotFound: {
 		Code:       ErrTemplateNotFound,
 		Message:    "Template path is incorrect or inaccessible",
 		Cause:      "",
-		Categories: []string{"file"},
+		Solution:   "",
+		Categories: []string{},
 		Labels:     map[string]string{},
-	}
-}
 
-func NewTemplateNotReadable(inner error) Error {
-	return Error{
-		inner:      inner,
+		translations: map[string]Error{},
+	},
+
+	ErrTemplateNotReadable: {
 		Code:       ErrTemplateNotReadable,
 		Message:    "Template path is unreadable",
 		Cause:      "",
-		Categories: []string{"file"},
+		Solution:   "",
+		Categories: []string{},
 		Labels:     map[string]string{},
-	}
-}
 
-func NewTemplateSyntax(inner error) Error {
-	return Error{
-		inner:      inner,
+		translations: map[string]Error{},
+	},
+
+	ErrTemplateSyntax: {
 		Code:       ErrTemplateSyntax,
 		Message:    "Syntax error in template",
 		Cause:      "",
-		Categories: []string{"codegen"},
+		Solution:   "",
+		Categories: []string{},
 		Labels:     map[string]string{},
-	}
+
+		translations: map[string]Error{},
+	},
+}
+
+func clone(code string, inner error) Error {
+	err := list[code]
+	err.inner = inner
+	return err
+}
+
+func NewCodeGenError(inner error) Error {
+	return clone(ErrCodeGenError, inner)
+}
+
+func NewFileNotFound(inner error) Error {
+	return clone(ErrFileNotFound, inner)
+}
+
+func NewFileNotReadable(inner error) Error {
+	return clone(ErrFileNotReadable, inner)
+}
+
+func NewInvalidDatasource(inner error) Error {
+	return clone(ErrInvalidDatasource, inner)
+}
+
+func NewSyntaxError(inner error) Error {
+	return clone(ErrSyntaxError, inner)
+}
+
+func NewTemplateExecution(inner error) Error {
+	return clone(ErrTemplateExecution, inner)
+}
+
+func NewTemplateNotFound(inner error) Error {
+	return clone(ErrTemplateNotFound, inner)
+}
+
+func NewTemplateNotReadable(inner error) Error {
+	return clone(ErrTemplateNotReadable, inner)
+}
+
+func NewTemplateSyntax(inner error) Error {
+	return clone(ErrTemplateSyntax, inner)
 }

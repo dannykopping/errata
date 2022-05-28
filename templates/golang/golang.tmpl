@@ -7,16 +7,12 @@ type Error struct {
   Code       string
   Message    string
   Cause      string
+  Solution   string
   Categories []string
   Labels     map[string]string
-  Interfaces interfaces
 
+	translations map[string]Error
   inner error
-}
-
-type interfaces struct {
-  HTTPResponseCode int
-  ShellExitCode int
 }
 
 func (e Error) Unwrap() error {
@@ -31,6 +27,79 @@ func (e Error) Error() string {
   return e.Code
 }
 
+func (e Error) Translate(locale string) Error {
+  // if no translations are defined, return self
+  if e.translations == nil {
+    return e
+  }
+
+  tr, found := e.translations[locale]
+
+  // if no translations are defined, return self
+  if !found {
+    return e
+  }
+
+  // add untranslated fields
+  tr.Code = e.Code
+  tr.Labels = e.Labels
+  tr.Categories = e.Categories
+  return tr
+}
+
+func (e Error) Locales() (list []string) {
+  for locale := range e.translations {
+    list = append(list, locale)
+  }
+
+  return
+}
+
+const (
+{%- for code, error in Errors sorted %}
+  Err{{ code | constantize }} = "{{ code }}"
+{%- endfor %}
+)
+
+var list = map[string]Error{
+  {%- for code, error in Errors sorted %}
+  Err{{ code | constantize }}: {
+      Code: Err{{ code | constantize }},
+      Message: "{{ error.Definition.message -}}",
+      Cause: "{{ error.Definition.cause }}",
+      Solution: "{{ error.Definition.solution }}",
+      Categories: []string{ {{- quote_list(error.Definition.categories) -}} },
+      Labels: map[string]string{ {{ quote_map(error.Definition.labels) }} },
+
+      translations: map[string]Error{
+        {%- for locale, x in I18n sorted %}
+        {%- for i18n_code, err in x sorted %}
+        {%- if i18n_code == code %}
+        "{{ locale }}": {
+          Message: "{{ err.Definition.message -}}",
+          Cause: "{{ err.Definition.cause }}",
+          Solution: "{{ err.Definition.solution }}",
+        },
+        {% endif %}
+        {% endfor %}
+        {% endfor %}
+      },
+  },
+  {% endfor %}
+}
+
+func clone(code string, inner error) Error {
+  err := list[code]
+  err.inner = inner
+  return err
+}
+
+{% for code, error in Errors sorted %}
+func New{{ code | constantize }}(inner error) Error {
+  return clone(Err{{ code | constantize }}, inner)
+}
+{% endfor -%}
+
 {% macro quote_list(items) %}
   {%- for item in items %}
     {{- item | stringformat:"%q" -}}
@@ -43,22 +112,3 @@ func (e Error) Error() string {
     {{ key | stringformat:"%q" -}}: "{{- item | stringformat:"%v" -}}",
   {%- endfor %}
 {% endmacro %}
-
-const (
-{%- for code, error in Errors sorted %}
-  Err{{ code | constantize }} = "{{ code }}"
-{%- endfor %}
-)
-
-{% for code, error in Errors sorted %}
-func New{{ code | constantize }}(inner error) Error {
-  return Error{
-        inner: inner,
-        Code: Err{{ code | constantize }},
-        Message: "{{ error.Definition.message -}}",
-        Cause: "{{ error.Definition.cause }}",
-        Categories: []string{ {{- quote_list(error.Definition.categories) -}} },
-        Labels: map[string]string{ {{ quote_map(error.Definition.labels) }} },
-    }
-}
-{% endfor -%}

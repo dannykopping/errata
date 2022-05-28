@@ -1,0 +1,7 @@
+---
+version: '0.1'
+
+errors:
+  file_not_found:
+    message: YML-lêer is verkeerd of ontoeganklik
+    solution: Maak seker die gegewe lêer bestaan en kan deur errata gelees word

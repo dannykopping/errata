@@ -39,14 +39,16 @@
       <td>Code</td>
       <td>Message</td>
       <td>Cause</td>
+      <td>Solution</td>
     </tr>
   </thead>
   {{ range $code, $error := .Errors }}
   <tr>
-    <td>{{ $code }}</td>
+    <td id="{{ $code }}">{{ $code }}</td>
     {{- with $error.Definition -}}
     <td>{{ .message }}</td>
     <td>{{ .cause }}</td>
+    <td>{{ .solution }}</td>
     {{- end -}}
   </tr>
   {{ end }}

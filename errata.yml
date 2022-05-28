@@ -5,13 +5,16 @@ errors:
   file_not_found:
     message: YML file is incorrect or inaccessible
     categories: [ file ]
+    solution: Ensure the given file exists and can be read by errata
   file_not_readable:
     message: YML file is unreadable
     categories: [ file ]
+    solution: Ensure the given file can be read by errata
 
   syntax_error:
     message: YML file is malformed
     categories: [ parsing ]
+    solution: Check the YML file for syntax errors
 
   invalid_datasource:
     message: Configured datasource is invalid

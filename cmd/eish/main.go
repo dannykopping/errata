@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
@@ -41,6 +40,11 @@ func main() {
 						Name:        "package",
 						Value:       "errors",
 						Destination: &codeGen.Package,
+					},
+					&cli.StringFlag{
+						Name:        "i18n.dir",
+						Value:       "i18n",
+						Destination: &codeGen.I18nDir,
 					},
 				},
 				Action: func(_ *cli.Context) error {
@@ -82,12 +86,13 @@ func main() {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 
-		var e errata.Error
-		if errors.As(err, &e) {
-			if code := e.Interfaces.ShellExitCode; code > 0 {
-				os.Exit(code)
-			}
-		}
+		// TODO: define exit codes as labels
+		//var e errata.Error
+		//if errors.As(err, &e) {
+		//	if code := e.Interfaces.ShellExitCode; code > 0 {
+		//		os.Exit(code)
+		//	}
+		//}
 
 		os.Exit(1)
 	}
