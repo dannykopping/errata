@@ -1,17 +1,21 @@
 package errata
 
 import (
+	"crypto/md5"
 	"fmt"
 	"io"
 	"os"
 	"sort"
+	"time"
 
 	"gopkg.in/yaml.v2"
 )
 
 type fileDatasource struct {
-	Version     string
-	Definitions map[string]ErrorDefinition
+	source []byte
+
+	SchemaVersion string
+	Definitions   map[string]ErrorDefinition
 }
 
 func (e *fileDatasource) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -25,7 +29,7 @@ func (e *fileDatasource) UnmarshalYAML(unmarshal func(interface{}) error) error 
 		return err
 	}
 
-	e.Version = fmt.Sprintf("%v", s.Version)
+	e.SchemaVersion = fmt.Sprintf("%v", s.Version)
 	e.Definitions = make(map[string]ErrorDefinition, len(s.Errors))
 
 	// sort map keys so generated code can be idempotent
@@ -44,6 +48,10 @@ func (e *fileDatasource) UnmarshalYAML(unmarshal func(interface{}) error) error 
 	}
 
 	return nil
+}
+
+func (e *fileDatasource) Version() string {
+	return fmt.Sprintf("%x/%s", md5.Sum(e.source), time.Now().Format(time.RFC3339))
 }
 
 func NewFileDatasource(path string) (DataSource, error) {
@@ -65,18 +73,19 @@ func NewFileDatasource(path string) (DataSource, error) {
 }
 
 func parse(reader io.Reader) (*fileDatasource, error) {
-	bytes, err := io.ReadAll(reader)
+	b, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, err
 	}
 
 	var db *fileDatasource
 
-	err = yaml.Unmarshal(bytes, &db)
+	err = yaml.Unmarshal(b, &db)
 	if err != nil {
 		return nil, err
 	}
 
+	db.source = b
 	return db, nil
 }
 

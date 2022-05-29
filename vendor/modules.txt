@@ -5,6 +5,9 @@ github.com/davecgh/go-spew/spew
 # github.com/flosch/pongo2/v5 v5.0.0
 ## explicit
 github.com/flosch/pongo2/v5
+# github.com/google/uuid v1.3.0
+## explicit
+github.com/google/uuid
 # github.com/iancoleman/strcase v0.1.3
 ## explicit
 github.com/iancoleman/strcase

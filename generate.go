@@ -52,6 +52,7 @@ func Generate(data CodeGen, w io.Writer) error {
 		"Package": data.Package,
 		"Errors":  source.List(),
 		"I18n":    i18nMap,
+		"Version": source.Version(),
 	}
 
 	_, err = templates.Open(path)

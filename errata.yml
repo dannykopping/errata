@@ -3,16 +3,16 @@ version: '0.1'
 
 errors:
   file_not_found:
-    message: YML file is incorrect or inaccessible
+    message: File is incorrect or inaccessible
     categories: [ file ]
-    solution: Ensure the given file exists and can be read by errata
+    solution: Ensure the given file exists and can be access by errata
   file_not_readable:
-    message: YML file is unreadable
+    message: File is unreadable
     categories: [ file ]
     solution: Ensure the given file can be read by errata
 
   invalid_syntax:
-    message: YML file is malformed
+    message: File is malformed
     categories: [ parsing ]
     solution: Check the YML file for syntax errors
 
