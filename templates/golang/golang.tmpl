@@ -92,9 +92,9 @@ var list = map[string]Error{
   {%- for code, error in Errors sorted %}
   Err{{ code | constantize }}: {
       Code: Err{{ code | constantize }},
-      Message: "{{ error.Definition.message -}}",
-      Cause: "{{ error.Definition.cause }}",
-      Solution: "{{ error.Definition.solution }}",
+      Message: `{{ error.Definition.message -}}`,
+      Cause: `{{ error.Definition.cause }}`,
+      Solution: `{{ error.Definition.solution }}`,
       Categories: []string{ {{- quote_list(error.Definition.categories) -}} },
       Labels: map[string]string{ {{ quote_map(error.Definition.labels) }} },
 

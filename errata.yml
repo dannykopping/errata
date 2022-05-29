@@ -20,9 +20,12 @@ errors:
     message: Configured datasource is invalid
     categories: [ init ]
 
-  code_gen_error:
+  code_gen:
     message: Code generation failed
     categories: [ codegen ]
+  markdown_render:
+    message: Markdown rendering failed
+    categories: [ web-ui ]
 
   template_not_found:
     message: Template path is incorrect or inaccessible

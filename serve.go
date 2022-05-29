@@ -1,9 +1,14 @@
 package errata
 
 import (
+	"bytes"
 	"embed"
+	"fmt"
 	"html/template"
 	"net/http"
+
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/renderer/html"
 )
 
 var (
@@ -22,6 +27,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 		s.errorHandler(err, w)
 		return
 	}
+
+	renderMarkdown(source)
 
 	tmplData := Tmpl{
 		Package: s.Package,
@@ -50,4 +57,24 @@ func (s *Server) errorHandler(err error, w http.ResponseWriter) {
 
 func Serve(srv *Server) error {
 	return http.ListenAndServe("localhost:8080", srv)
+}
+
+func renderMarkdown(source DataSource) {
+	// render markdown
+	var buf bytes.Buffer
+	md := goldmark.New(
+		goldmark.WithRendererOptions(
+			html.WithHardWraps(),
+		),
+	)
+
+	for _, e := range source.List() {
+		if sol, ok := e.Definition["solution"]; ok {
+			if err := md.Convert([]byte(fmt.Sprintf("%s", sol)), &buf); err != nil {
+				fmt.Println(NewMarkdownRenderErr(err))
+			}
+
+			e.Definition["solution"] = template.HTML(buf.String())
+		}
+	}
 }

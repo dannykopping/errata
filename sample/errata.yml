@@ -20,6 +20,10 @@ errors:
   invalid_email:
     message: Please provide a valid email address
     cause: Given email address is invalid
+    solution: >
+      Ensure the email address has a _username_, an `@` symbol, and a _domain_ name.
+
+      **Example: `john@doe.com`**
     categories: [ login ]
     labels:
       http_response_code: 400
