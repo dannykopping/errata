@@ -21,7 +21,6 @@ type Error struct {
   Labels     map[string]string
 
   uuid         string
-	translations map[string]Error
   wrapped      error
 }
 
@@ -39,34 +38,6 @@ func (e Error) Error() string {
   }
 
   return e.Code
-}
-
-func (e Error) Translate(locale string) Error {
-  // if no translations are defined, return self
-  if e.translations == nil {
-    return e
-  }
-
-  tr, found := e.translations[locale]
-
-  // if no translations are defined, return self
-  if !found {
-    return e
-  }
-
-  // add untranslated fields
-  tr.Code = e.Code
-  tr.Labels = e.Labels
-  tr.Categories = e.Categories
-  return tr
-}
-
-func (e Error) Locales() (list []string) {
-  for locale := range e.translations {
-    list = append(list, locale)
-  }
-
-  return
 }
 
 const (
@@ -97,20 +68,6 @@ var list = map[string]Error{
       Solution: `{{ error.Definition.solution }}`,
       Categories: []string{ {{- quote_list(error.Definition.categories) -}} },
       Labels: map[string]string{ {{ quote_map(error.Definition.labels) }} },
-
-      translations: map[string]Error{
-        {%- for locale, errs in I18n sorted %}
-        {%- for i18n_code, err in errs sorted %}
-        {%- if i18n_code == code %}
-        "{{ locale }}": {
-          Message: "{{ err.Definition.message -}}",
-          Cause: "{{ err.Definition.cause }}",
-          Solution: "{{ err.Definition.solution }}",
-        },
-        {% endif %}
-        {% endfor %}
-        {% endfor %}
-      },
   },
   {% endfor %}
 }

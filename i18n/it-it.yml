@@ -1,7 +1,0 @@
----
-version: '0.1'
-
-errors:
-  file_not_found:
-    message: Il file YML è errato o inaccessibile
-    solution: Assicurati che il file specificato esista e possa essere letto da errata

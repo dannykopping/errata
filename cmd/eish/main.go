@@ -41,11 +41,6 @@ func main() {
 						Value:       "errors",
 						Destination: &codeGen.Package,
 					},
-					&cli.StringFlag{
-						Name:        "i18n.dir",
-						Value:       "i18n",
-						Destination: &codeGen.I18nDir,
-					},
 				},
 				Action: func(_ *cli.Context) error {
 					return errata.Generate(codeGen, os.Stdout)
