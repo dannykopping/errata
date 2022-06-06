@@ -1,14 +1,9 @@
 package errata
 
 import (
-	"bytes"
 	"embed"
-	"fmt"
 	"html/template"
 	"net/http"
-
-	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/renderer/html"
 )
 
 var (
@@ -22,7 +17,7 @@ type Server struct {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
-	source, err := NewFileDatasource(s.File)
+	source, err := NewHCLDatasource(s.File)
 	if err != nil {
 		s.errorHandler(err, w)
 		return
@@ -60,21 +55,22 @@ func Serve(srv *Server) error {
 }
 
 func renderMarkdown(source DataSource) {
+	return
 	// render markdown
-	var buf bytes.Buffer
-	md := goldmark.New(
-		goldmark.WithRendererOptions(
-			html.WithHardWraps(),
-		),
-	)
-
-	for _, e := range source.List() {
-		if sol, ok := e.Definition["solution"]; ok {
-			if err := md.Convert([]byte(fmt.Sprintf("%s", sol)), &buf); err != nil {
-				fmt.Println(NewMarkdownRenderErr(err))
-			}
-
-			e.Definition["solution"] = template.HTML(buf.String())
-		}
-	}
+	//var buf bytes.Buffer
+	//md := goldmark.New(
+	//	goldmark.WithRendererOptions(
+	//		html.WithHardWraps(),
+	//	),
+	//)
+	//
+	//for _, e := range source.List() {
+	//	if sol, ok := e.Definition["solution"]; ok {
+	//		if err := md.Convert([]byte(fmt.Sprintf("%s", sol)), &buf); err != nil {
+	//			fmt.Println(NewMarkdownRenderErr(err))
+	//		}
+	//
+	//		e.Definition["solution"] = template.HTML(buf.String())
+	//	}
+	//}
 }

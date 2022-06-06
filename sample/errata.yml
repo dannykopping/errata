@@ -7,6 +7,14 @@ errors:
     message: One or more values are missing
     cause: Form submission was missing required fields
     categories: [ login ]
+
+    args must always be strings
+    context must always be a generic type
+
+    args:
+      missing:
+        golang: []interface{}
+        php:
     labels:
       http_response_code: 400
       shell_exit_code: 1

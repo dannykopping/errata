@@ -26,7 +26,8 @@ type CodeGen struct {
 }
 
 func Generate(data CodeGen, w io.Writer) error {
-	source, err := NewFileDatasource(data.File)
+	//source, err := NewFileDatasource(data.File)
+	source, err := NewHCLDatasource(data.File)
 	if err != nil {
 		return err
 	}
@@ -35,10 +36,11 @@ func Generate(data CodeGen, w io.Writer) error {
 	//		-> built-in: -template=golang
 	//		-> external: -template=my-template.tmpl
 	file := fmt.Sprintf("%s.tmpl", data.Lang)
-	path := fmt.Sprintf("templates/%s/%s", data.Lang, file)
+	path := fmt.Sprintf("templates/%s", file)
 
 	tmplData := pongo2.Context{
 		"Package": data.Package,
+		"Options": source.Options(),
 		"Errors":  source.List(),
 		"Version": source.Version(),
 	}
@@ -54,7 +56,12 @@ func Generate(data CodeGen, w io.Writer) error {
 
 	pongo2.SetAutoescape(false)
 
-	tmpl, err := pongo2.FromFile(path)
+	b, err := templates.ReadFile(path)
+	if err != nil {
+		return NewTemplateNotReadableErr(err)
+	}
+
+	tmpl, err := pongo2.FromBytes(b)
 	if err != nil {
 		return NewTemplateSyntaxErr(err)
 	}
