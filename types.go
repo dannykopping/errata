@@ -11,9 +11,9 @@ type ErrorDefinition struct {
 }
 
 type ErrorOptions struct {
-	Prefix     string   `hcl:"prefix"`
-	GuidesPath string   `hcl:"guides_path"`
-	Imports    []string `hcl:"imports"`
+	Prefix  string   `hcl:"prefix,optional"`
+	Imports []string `hcl:"imports,optional"`
+	BaseURL string   `hcl:"base_url,optional"`
 }
 
 type Arg struct {

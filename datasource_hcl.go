@@ -1,6 +1,8 @@
 package errata
 
 import (
+	"crypto/md5"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -23,10 +25,10 @@ type hclDatasource struct {
 type hclErrorDefinition struct {
 	Code       string            `hcl:",label"`
 	Message    string            `hcl:"message"`
-	Cause      string            `hcl:"cause"`
-	Categories []string          `hcl:"categories"`
-	Args       []cty.Value       `hcl:"args"`
-	Labels     map[string]string `hcl:"labels"`
+	Cause      string            `hcl:"cause,optional"`
+	Categories []string          `hcl:"categories,optional"`
+	Args       []cty.Value       `hcl:"args,optional"`
+	Labels     map[string]string `hcl:"labels,optional"`
 	Guide      string            `hcl:"guide"`
 	//Remain     hcl.Body          `hcl:",remain"`
 }
@@ -66,7 +68,7 @@ func (h hclDatasource) FindByCode(code string) ErrorDefinition {
 }
 
 func (h hclDatasource) Version() string {
-	return h.SchemaVersion
+	return fmt.Sprintf("%x", md5.Sum(h.source))
 }
 
 func NewHCLDatasource(path string) (DataSource, error) {
@@ -79,9 +81,7 @@ func NewHCLDatasource(path string) (DataSource, error) {
 		return nil, NewFileNotReadableErr(err)
 	}
 
-	// TODO: error handling
-	abs, _ := filepath.Abs(filepath.Dir(path))
-	db, err := parseHCL(f, abs)
+	db, err := parseHCL(f)
 
 	if err != nil {
 		return nil, NewInvalidSyntaxErr(err)
@@ -90,7 +90,7 @@ func NewHCLDatasource(path string) (DataSource, error) {
 	return db, nil
 }
 
-func parseHCL(reader io.Reader, base string) (*hclDatasource, error) {
+func parseHCL(reader io.Reader) (*hclDatasource, error) {
 	b, err := io.ReadAll(reader)
 	if err != nil {
 		return nil, err
@@ -122,8 +122,8 @@ func parseHCL(reader io.Reader, base string) (*hclDatasource, error) {
 				},
 				Type: function.StaticReturnType(cty.String),
 				Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
-					path := filepath.Clean(filepath.Join(base, args[0].AsString()))
-					return cty.StringVal(path), err
+					path := filepath.Clean(args[0].AsString())
+					return cty.StringVal(fmt.Sprintf("file://%s", path)), err
 				},
 			}),
 		},
