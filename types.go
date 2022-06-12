@@ -11,9 +11,10 @@ type ErrorDefinition struct {
 }
 
 type ErrorOptions struct {
-	Prefix  string   `hcl:"prefix,optional"`
-	Imports []string `hcl:"imports,optional"`
-	BaseURL string   `hcl:"base_url,optional"`
+	Prefix      string   `hcl:"prefix,optional"`
+	Imports     []string `hcl:"imports,optional"`
+	BaseURL     string   `hcl:"base_url,optional"`
+	Description string   `hcl:"description,optional"`
 }
 
 type Arg struct {

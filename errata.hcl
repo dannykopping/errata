@@ -3,6 +3,7 @@ version = "0.1"
 options {
   prefix   = "errata-"
   base_url = "https://dannykopping.github.io/errata/errata/"
+  description = "Below is a set of errors that the `eish` program can return."
 }
 
 error "file-not-found" {
