@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsimple"
@@ -15,11 +16,14 @@ import (
 )
 
 type hclDatasource struct {
+	sync.RWMutex
+
 	source []byte
+	list   map[string]ErrorDefinition
 
 	SchemaVersion string               `hcl:"version"`
 	Opts          ErrorOptions         `hcl:"options,block"`
-	Errors        []hclErrorDefinition `hcl:"errors,block"`
+	Errors        []hclErrorDefinition `hcl:"error,block"`
 }
 
 type hclErrorDefinition struct {
@@ -29,12 +33,36 @@ type hclErrorDefinition struct {
 	Categories []string          `hcl:"categories,optional"`
 	Args       []cty.Value       `hcl:"args,optional"`
 	Labels     map[string]string `hcl:"labels,optional"`
-	Guide      string            `hcl:"guide"`
+	Guide      string            `hcl:"guide,optional"`
+
+	// TODO use Remain to allow custom fields being defined
 	//Remain     hcl.Body          `hcl:",remain"`
 }
 
-func (h hclDatasource) List() map[string]ErrorDefinition {
-	list := make(map[string]ErrorDefinition, len(h.Errors))
+func (h *hclDatasource) List() map[string]ErrorDefinition {
+	if !h.isLoaded() {
+		h.load()
+	}
+
+	return h.list
+}
+
+func (h *hclDatasource) isLoaded() bool {
+	h.RLock()
+	defer h.RUnlock()
+
+	return h.list != nil
+}
+
+func (h *hclDatasource) load() {
+	if h.isLoaded() {
+		return
+	}
+
+	h.Lock()
+	defer h.Unlock()
+
+	h.list = make(map[string]ErrorDefinition, len(h.Errors))
 
 	for _, e := range h.Errors {
 		var args []Arg
@@ -44,7 +72,7 @@ func (h hclDatasource) List() map[string]ErrorDefinition {
 			args = append(args, arg)
 		}
 
-		list[e.Code] = ErrorDefinition{
+		h.list[e.Code] = ErrorDefinition{
 			Code:       e.Code,
 			Message:    e.Message,
 			Cause:      e.Cause,
@@ -54,35 +82,38 @@ func (h hclDatasource) List() map[string]ErrorDefinition {
 			Labels:     e.Labels,
 		}
 	}
-
-	return list
 }
 
-func (h hclDatasource) Options() ErrorOptions {
+func (h *hclDatasource) Options() ErrorOptions {
 	return h.Opts
 }
 
-func (h hclDatasource) FindByCode(code string) ErrorDefinition {
-	//TODO implement me
-	panic("implement me")
+func (h *hclDatasource) FindByCode(code string) ErrorDefinition {
+	err, ok := h.list[code]
+	if !ok {
+		// if we cannot find the error by code, create one
+		return ErrorDefinition{
+			Code: code,
+		}
+	}
+	return err
 }
 
-func (h hclDatasource) Version() string {
+func (h *hclDatasource) Validate() error {
+	// TODO: define validation rules
+	return nil
+}
+
+func (h *hclDatasource) Version() string {
 	return fmt.Sprintf("%x", md5.Sum(h.source))
 }
 
 func NewHCLDatasource(path string) (DataSource, error) {
 	if _, err := os.Stat(path); err != nil {
-		return nil, NewFileNotFoundErr(err)
+		return nil, NewFileNotFoundErr(err, path)
 	}
 
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, NewFileNotReadableErr(err)
-	}
-
-	db, err := parseHCL(f)
-
+	db, err := parseHCL(path)
 	if err != nil {
 		return nil, NewInvalidSyntaxErr(err)
 	}
@@ -90,15 +121,20 @@ func NewHCLDatasource(path string) (DataSource, error) {
 	return db, nil
 }
 
-func parseHCL(reader io.Reader) (*hclDatasource, error) {
-	b, err := io.ReadAll(reader)
+func parseHCL(path string) (*hclDatasource, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, NewFileNotReadableErr(err, path)
+	}
+
+	b, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
 
 	var db hclDatasource
 
-	err = hclsimple.Decode("blah.hcl", b, &hcl.EvalContext{
+	err = hclsimple.Decode(filepath.Base(path), b, &hcl.EvalContext{
 		Functions: map[string]function.Function{
 			"arg": function.New(&function.Spec{
 				Params: []function.Parameter{
@@ -133,13 +169,7 @@ func parseHCL(reader io.Reader) (*hclDatasource, error) {
 		return nil, NewCodeGenErr(err)
 	}
 
-	//for i := range s.Errors[0].Args {
-	//	var a Arg
-	//	gocty.FromCtyValue(s.Errors[0].Args[i], &a)
-	//	fmt.Print()
-	//}
-	//os.Exit(1)
-
+	db.load()
 	db.source = b
 	return &db, nil
 }

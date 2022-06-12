@@ -32,6 +32,10 @@ func Generate(data CodeGen, w io.Writer) error {
 		return err
 	}
 
+	if err := source.Validate(); err != nil {
+		return NewInvalidDefinitionsErr(err, data.File)
+	}
+
 	// TODO: support built-in and external templates
 	//		-> built-in: -template=golang
 	//		-> external: -template=my-template.tmpl
@@ -54,6 +58,7 @@ func Generate(data CodeGen, w io.Writer) error {
 		return pongo2.AsValue(strcase.ToCamel(in.String())), nil
 	})
 
+	templateSet := pongo2.NewSet("blah", pongo2.NewFSLoader(templates))
 	pongo2.SetAutoescape(false)
 
 	b, err := templates.ReadFile(path)
@@ -61,7 +66,7 @@ func Generate(data CodeGen, w io.Writer) error {
 		return NewTemplateNotReadableErr(err)
 	}
 
-	tmpl, err := pongo2.FromBytes(b)
+	tmpl, err := templateSet.FromBytes(b)
 	if err != nil {
 		return NewTemplateSyntaxErr(err)
 	}
