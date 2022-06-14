@@ -22,25 +22,84 @@ var (
 type Server struct {
 	File    string
 	Package string
+
+	db DataSource
 }
 
-func (s *Server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	source, err := NewHCLDatasource(s.File)
+func NewServer(path, pkg string) (*Server, error) {
+	source, err := NewHCLDatasource(path)
 	if err != nil {
-		s.errorHandler(err, w)
+		return nil, err
+	}
+
+	return &Server{
+		File:    path,
+		Package: pkg,
+		db:      source,
+	}, nil
+}
+
+func (s *Server) List(w http.ResponseWriter, req *http.Request) {
+	data := pongo2.Context{
+		"Package":       s.Package,
+		"Errors":        s.db.List(),
+		"Options":       s.db.Options(),
+		"LastUpdatedAt": time.Now().Format(time.RFC3339),
+	}
+	renderMarkdown(s.db)
+
+	path := "web/list.gohtml"
+	_, err := web.Open(path)
+	if err != nil {
+		s.errorHandler(NewTemplateNotFoundErr(err), w)
+		return
+	}
+
+	b, err := web.ReadFile(path)
+	if err != nil {
+		s.errorHandler(NewTemplateNotReadableErr(err), w)
+	}
+
+	md := goldmark.New(
+		goldmark.WithRendererOptions(
+			html.WithHardWraps(),
+		),
+	)
+	pongo2.RegisterFilter("markdown", filterMarkdown(md))
+
+	tmpl, err := pongo2.FromBytes(b)
+	if err != nil {
+		s.errorHandler(NewTemplateSyntaxErr(err), w)
+		return
+	}
+
+	if err := tmpl.ExecuteWriter(data, w); err != nil {
+		s.errorHandler(NewTemplateExecutionErr(err), w)
+		return
+	}
+}
+
+func (s *Server) Item(w http.ResponseWriter, req *http.Request) {
+	params := mux.Vars(req)
+	code := params["code"]
+
+	erratum, ok := s.db.FindByCode(code)
+	if !ok {
+		s.errorHandler(NewServeUnknownCodeErr(nil, code), w)
 		return
 	}
 
 	data := pongo2.Context{
 		"Package":       s.Package,
-		"Errors":        source.List(),
-		"Options":       source.Options(),
+		"Error":         erratum,
+		"Code":          code,
+		"Options":       s.db.Options(),
 		"LastUpdatedAt": time.Now().Format(time.RFC3339),
 	}
-	renderMarkdown(source)
+	renderMarkdown(s.db)
 
-	path := "web/list.gohtml"
-	_, err = web.Open(path)
+	path := "web/single.gohtml"
+	_, err := web.Open(path)
 	if err != nil {
 		s.errorHandler(NewTemplateNotFoundErr(err), w)
 		return
@@ -101,7 +160,8 @@ func Serve(srv *Server) error {
 	}
 	r.PathPrefix("/assets/").Handler(http.FileServer(http.FS(webFS)))
 	r.HandleFunc("/favicon.ico", http.FileServer(http.FS(webFS)).ServeHTTP)
-	r.HandleFunc("/", srv.ServeHTTP)
+	r.HandleFunc("/", srv.List)
+	r.HandleFunc("/code/{code}", srv.Item)
 
 	return http.ListenAndServe("localhost:33707", r)
 }

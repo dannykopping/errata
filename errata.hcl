@@ -7,7 +7,7 @@ options {
 }
 
 error "file-not-found" {
-  message    = "File is incorrect or inaccessible"
+  message    = "File path %q is incorrect or inaccessible"
   categories = ["file"]
   guide      = "Ensure the given file exists and can be access by errata"
   args       = [
@@ -18,7 +18,7 @@ error "file-not-found" {
   }
 }
 error "file-not-readable" {
-  message    = "File is unreadable"
+  message    = "File %q is unreadable"
   categories = ["file"]
   guide      = "Ensure the given file can be read by errata"
   args       = [
@@ -43,7 +43,13 @@ error "invalid-definitions" {
 error "invalid-syntax" {
   message    = "File is malformed"
   categories = ["parsing"]
-  guide      = "Check the YML file for syntax errors"
+  guide      = "Check the given datasource file for syntax errors"
+}
+
+error "invalid-datasource" {
+  message    = "Datasource is invalid"
+  categories = ["datasource"]
+  guide      = "Check the given datasource file for errors"
 }
 
 error "code-gen" {
@@ -71,4 +77,18 @@ error "template-execution" {
   message    = "Error in template execution"
   cause      = "Possible use of missing or renamed field"
   categories = ["codegen"]
+}
+error "serve-web-ui" {
+  message    = "Cannot serve web UI for datasource %q"
+  args       = [
+    arg("path", "string")
+  ]
+  categories = ["serve", "web-ui"]
+}
+error "serve-unknown-code" {
+  message    = "Cannot find error definition for given code %q"
+  args       = [
+    arg("code", "string")
+  ]
+  categories = ["serve", "web-ui"]
 }

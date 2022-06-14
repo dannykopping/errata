@@ -68,10 +68,12 @@ func main() {
 				},
 				Action: func(_ *cli.Context) error {
 					// TODO: don't use CodeGen type
-					return errata.Serve(&errata.Server{
-						File:    codeGen.File,
-						Package: codeGen.Package,
-					})
+					srv, err := errata.NewServer(codeGen.File, codeGen.Package)
+					if err != nil {
+						return errata.NewServeWebUiErr(err, codeGen.File)
+					}
+
+					return errata.Serve(srv)
 				},
 			},
 		},

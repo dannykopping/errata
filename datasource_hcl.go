@@ -88,15 +88,15 @@ func (h *hclDatasource) Options() ErrorOptions {
 	return h.Opts
 }
 
-func (h *hclDatasource) FindByCode(code string) ErrorDefinition {
+func (h *hclDatasource) FindByCode(code string) (ErrorDefinition, bool) {
 	err, ok := h.list[code]
 	if !ok {
 		// if we cannot find the error by code, create one
 		return ErrorDefinition{
 			Code: code,
-		}
+		}, false
 	}
-	return err
+	return err, true
 }
 
 func (h *hclDatasource) Validate() error {
@@ -115,7 +115,7 @@ func NewHCLDatasource(path string) (DataSource, error) {
 
 	db, err := parseHCL(path)
 	if err != nil {
-		return nil, NewInvalidSyntaxErr(err)
+		return nil, NewInvalidDatasourceErr(err)
 	}
 
 	return db, nil
@@ -166,7 +166,7 @@ func parseHCL(path string) (*hclDatasource, error) {
 	}, &db)
 
 	if err != nil {
-		return nil, NewCodeGenErr(err)
+		return nil, NewInvalidSyntaxErr(err)
 	}
 
 	db.load()
