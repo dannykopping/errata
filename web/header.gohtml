@@ -40,16 +40,16 @@
         <div class="site-logo"><a class="navbar-brand" href="/"><img class="logo-icon me-2" src="/assets/images/coderdocs-logo.svg" alt="logo"><span class="logo-text">Errata</span></a></div>
 
         <div class="top-search-box d-lg-none p-3">
-          <form class="search-form">
-            <input type="text" placeholder="Search the docs..." name="search" class="form-control search-input">
+          <form class="search-form" action="/search" method="get">
+            <input type="text" placeholder="Search by error code..." name="term" class="form-control search-input">
             <button type="submit" class="btn search-btn" value="Search"><i class="fas fa-search"></i></button>
           </form>
         </div>
       </div><!--//docs-logo-wrapper-->
       <div class="docs-top-utilities d-flex justify-content-end align-items-center">
         <div class="top-search-box d-none d-lg-flex">
-          <form class="search-form">
-            <input type="text" placeholder="Search by error code..." name="search" class="form-control search-input">
+          <form class="search-form" action="/search" method="get">
+            <input type="text" placeholder="Search by error code..." name="term" class="form-control search-input">
             <button type="submit" class="btn search-btn" value="Search"><i class="fas fa-search"></i></button>
           </form>
         </div>

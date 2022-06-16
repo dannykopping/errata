@@ -19,12 +19,6 @@ type Tmpl struct {
 	Errors  map[string]ErrorDefinition
 }
 
-type CodeGen struct {
-	File    string
-	Lang    string
-	Package string
-}
-
 func Generate(data CodeGen, w io.Writer) error {
 	//source, err := NewFileDatasource(data.File)
 	source, err := NewHCLDatasource(data.File)

@@ -1,13 +1,13 @@
 package errata
 
 type ErrorDefinition struct {
-	Code       string
-	Message    string
-	Cause      string
-	Guide      string
-	Args       []Arg
-	Categories []string
-	Labels     map[string]string
+	Code       string            `json:"code,omitempty"`
+	Message    string            `json:"message,omitempty"`
+	Cause      string            `json:"cause,omitempty"`
+	Guide      string            `json:"guide,omitempty"`
+	Args       []Arg             `json:"args,omitempty"`
+	Categories []string          `json:"categories,omitempty"`
+	Labels     map[string]string `json:"labels,omitempty"`
 }
 
 type ErrorOptions struct {

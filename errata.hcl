@@ -92,3 +92,11 @@ error "serve-unknown-code" {
   ]
   categories = ["serve", "web-ui"]
 }
+error "serve-search-index" {
+  message    = "Failed to build search index"
+  categories = ["serve", "web-ui", "search"]
+}
+error "serve-search-missing-term" {
+  message    = "Search request is missing a \"term\" query string parameter"
+  categories = ["serve", "web-ui", "search"]
+}
