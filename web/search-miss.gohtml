@@ -1,0 +1,13 @@
+{% ssi "web/header.gohtml" %}
+
+<div class="docs-wrapper">
+  <div class="docs-content">
+    <div class="container">
+      <article class="docs-article" id="errata">
+        <h3>No errors found that match search term {{ Term|stringformat:"%q" }}</h3>
+      </article>
+    </div>
+  </div>
+</div><!--//docs-wrapper-->
+
+{% ssi "web/footer.gohtml" %}

@@ -1,0 +1,31 @@
+{% macro quote_list(items) export %}
+  {%- for item in items %}
+    {{- item | stringformat:"%q" -}}
+    {%- if not forloop.Last %}, {% endif -%}
+  {% endfor -%}
+{% endmacro %}
+
+{% macro quote_map(items) export %}
+  {%- for key, item in items sorted %}
+    {{ key | stringformat:"%q" -}}: "{{- item | stringformat:"%v" -}}",
+  {%- endfor %}
+{% endmacro %}
+
+{% macro args(items) export %}
+  {%- for item in items sorted %}
+    {{- item.Name }} {{ item.Type }},
+  {%- endfor -%}
+{% endmacro %}
+
+{% macro contexts(items) export %}
+  {%- for context in items %}
+    {{- context }} interface{},
+  {% endfor -%}
+{% endmacro %}
+
+{% macro args_list(items) export -%}
+  {%- for item in items sorted %}
+    {{- item.Name }}
+    {%- if not forloop.Last %}, {% endif -%}
+  {% endfor -%}
+{% endmacro %}

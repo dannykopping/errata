@@ -1,0 +1,14 @@
+{% import "web/item.gohtml" erratum %}
+{% ssi "web/header.gohtml" %}
+
+<div class="docs-wrapper">
+  <div class="docs-content">
+    <div class="container">
+      <article class="docs-article" id="errata">
+        {{ erratum(Code, Error) }}
+      </article>
+    </div>
+  </div>
+</div><!--//docs-wrapper-->
+
+{% ssi "web/footer.gohtml" %}

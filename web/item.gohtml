@@ -1,0 +1,50 @@
+{% macro erratum(code, err) export %}
+<section class="docs-section" id="err-{{ code | urlencode }}">
+  <a href="/code/{{ code }}">
+    <h2 class="section-heading">{{ code }}
+      <div class="categories">
+        {% if err.Categories|length > 0 %}
+        {% for cat in err.Categories %}<span class="badge bg-secondary rounded-pill">{{ cat }}</span>{% endfor %}
+        {% endif %}
+      </div>
+    </h2>
+  </a>
+
+  <div class="table-responsive my-4">
+    <table class="table table-borderless">
+      <tbody>
+      <tr>
+        <th scope="row" style="width:10%">Message</th>
+        <td>{{ err.Message }}</td>
+      </tr>
+      {% if err.Guide %}
+      <tr>
+        <th scope="row" style="width:10%">Guide</th>
+        <td>{{ err.Guide | markdown }}</td>
+      </tr>
+      {% endif %}
+      {% if err.Labels|length > 0 %}
+      <tr>
+        <th scope="row" style="width:10%">Labels</th>
+        <td>
+          <div class="table-responsive col-6">
+            <table class="table table-striped">
+              <tbody>
+              {% for key, val in err.Labels sorted %}
+              <tr>
+                <th scope="row">{{ key }}</th>
+                <td>{{ val }}</td>
+              </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div><!--//table-responsive-->
+        </td>
+      </tr>
+      {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+</section><!--//section-->
+{% endmacro %}

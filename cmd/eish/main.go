@@ -9,7 +9,10 @@ import (
 )
 
 func main() {
-	var codeGen errata.CodeGen
+	var (
+		codeGen errata.CodeGen
+		webUI   errata.WebUI
+	)
 
 	app := &cli.App{
 		Name:     "EISH",
@@ -53,25 +56,16 @@ func main() {
 					&cli.StringFlag{
 						Name:        "eds.file",
 						Required:    true,
-						Destination: &codeGen.File,
-					},
-					&cli.StringFlag{
-						Name:        "language",
-						Value:       "golang",
-						Destination: &codeGen.Lang,
-					},
-					&cli.StringFlag{
-						Name:        "package",
-						Value:       "errors",
-						Destination: &codeGen.Package,
+						Destination: &webUI.DatabaseFile,
 					},
 				},
 				Action: func(_ *cli.Context) error {
-					// TODO: don't use CodeGen type
-					return errata.Serve(&errata.Server{
-						File:    codeGen.File,
-						Package: codeGen.Package,
-					})
+					srv, err := errata.NewServer(webUI)
+					if err != nil {
+						return errata.NewServeWebUiErr(err, codeGen.File)
+					}
+
+					return errata.Serve(srv)
 				},
 			},
 		},

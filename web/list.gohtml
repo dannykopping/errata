@@ -1,0 +1,24 @@
+{% import "web/item.gohtml" erratum %}
+{% import "web/sidebar.gohtml" sidebar %}
+{% ssi "web/header.gohtml" %}
+
+<div class="docs-wrapper">
+  {{ sidebar(Errors) }}
+  <div class="docs-content">
+    <div class="container">
+      <article class="docs-article" id="errata">
+        <header class="docs-header">
+          <h1 class="docs-heading">Errata List <span class="docs-time">{{ LastUpdatedAt }}</span></h1>
+          {{ Options.Description | markdown }}
+        </header>
+
+        {% for code, err in Errors sorted %}
+        {{ erratum(code, err) }}
+        {% endfor %}
+
+      </article>
+    </div>
+  </div>
+</div><!--//docs-wrapper-->
+
+{% ssi "web/footer.gohtml" %}

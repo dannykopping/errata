@@ -1,0 +1,13 @@
+{% macro sidebar(errs) export %}
+<div id="docs-sidebar" class="docs-sidebar">
+  <nav id="docs-nav" class="docs-nav navbar">
+    <ul class="section-items list-unstyled nav flex-column pb-3">
+      <li class="nav-item section-title"><a class="nav-link scrollto active" href="#errata"><span class="theme-icon-holder me-2"><i class="fas fa-rectangle-xmark"></i></span>Errata</a></li>
+      {% for code, err in errs sorted %}
+      <li class="nav-item"><a class="nav-link scrollto" href="#err-{{ code | urlencode }}">{{ Options.Prefix }}{{ code }}</a></li>
+      {% endfor %}
+    </ul>
+
+  </nav><!--//docs-nav-->
+</div><!--//docs-sidebar-->
+{% endmacro %}
