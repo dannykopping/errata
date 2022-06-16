@@ -40,7 +40,7 @@ func (e Error) UUID() string {
 }
 
 func (e Error) Error() string {
-	message := fmt.Sprintf("[errata-%s] [%s:%v] %s. For more details, see %s.\n\tWrapped error: %s", e.Code, e.file, e.line, e.Message, e.HelpURL(), e.Unwrap())
+	message := fmt.Sprintf("[errata-%s] [%s:%v] %s. For more details, see %s.\n↳ %s", e.Code, e.file, e.line, e.Message, e.HelpURL(), e.Unwrap())
 	return fmt.Sprintf(message, e.Args...)
 }
 
