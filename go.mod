@@ -12,7 +12,6 @@ require (
 	github.com/urfave/cli/v2 v2.3.0
 	github.com/yuin/goldmark v1.4.12
 	github.com/zclconf/go-cty v1.8.0
-	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
@@ -47,5 +46,6 @@ require (
 	go.etcd.io/bbolt v1.3.5 // indirect
 	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
 	golang.org/x/text v0.3.7 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )

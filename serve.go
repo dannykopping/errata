@@ -88,7 +88,7 @@ func (s *Server) Search(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	errs := make(map[string]ErrorDefinition, len(searchResult.Hits))
+	errs := make(map[string]errorDefinition, len(searchResult.Hits))
 	for _, e := range searchResult.Hits {
 		err, _ := s.db.FindByCode(e.ID)
 		errs[e.ID] = err

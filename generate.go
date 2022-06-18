@@ -16,7 +16,7 @@ var (
 
 type Tmpl struct {
 	Package string
-	Errors  map[string]ErrorDefinition
+	Errors  map[string]errorDefinition
 }
 
 func Generate(data CodeGen, w io.Writer) error {

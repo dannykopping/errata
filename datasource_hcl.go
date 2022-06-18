@@ -19,11 +19,12 @@ type hclDatasource struct {
 	sync.RWMutex
 
 	source []byte
-	list   map[string]ErrorDefinition
+	list   map[string]errorDefinition
 
-	SchemaVersion string               `hcl:"version"`
-	Opts          ErrorOptions         `hcl:"options,block"`
-	Errors        []hclErrorDefinition `hcl:"error,block"`
+	SchemaVersion string `hcl:"version"`
+	// options are, well, optional - and HCL only allows optional blocks as pointer types
+	Opts   *errorOptions        `hcl:"options,block"`
+	Errors []hclErrorDefinition `hcl:"error,block"`
 }
 
 type hclErrorDefinition struct {
@@ -39,7 +40,19 @@ type hclErrorDefinition struct {
 	//Remain     hcl.Body          `hcl:",remain"`
 }
 
-func (h *hclDatasource) List() map[string]ErrorDefinition {
+type errorOptions struct {
+	Prefix      string   `hcl:"prefix,optional"`
+	Imports     []string `hcl:"imports,optional"`
+	BaseURL     string   `hcl:"base_url,optional"`
+	Description string   `hcl:"description,optional"`
+}
+
+type arg struct {
+	Name string `cty:"name"`
+	Type string `cty:"type"`
+}
+
+func (h *hclDatasource) List() map[string]errorDefinition {
 	if !h.isLoaded() {
 		h.load()
 	}
@@ -62,17 +75,17 @@ func (h *hclDatasource) load() {
 	h.Lock()
 	defer h.Unlock()
 
-	h.list = make(map[string]ErrorDefinition, len(h.Errors))
+	h.list = make(map[string]errorDefinition, len(h.Errors))
 
 	for _, e := range h.Errors {
-		var args []Arg
+		var args []arg
 		for _, argRaw := range e.Args {
-			var arg Arg
+			var arg arg
 			_ = gocty.FromCtyValue(argRaw, &arg)
 			args = append(args, arg)
 		}
 
-		h.list[e.Code] = ErrorDefinition{
+		h.list[e.Code] = errorDefinition{
 			Code:       e.Code,
 			Message:    e.Message,
 			Cause:      e.Cause,
@@ -84,15 +97,19 @@ func (h *hclDatasource) load() {
 	}
 }
 
-func (h *hclDatasource) Options() ErrorOptions {
-	return h.Opts
+func (h *hclDatasource) Options() errorOptions {
+	if h.Opts == nil {
+		return errorOptions{}
+	}
+
+	return *h.Opts
 }
 
-func (h *hclDatasource) FindByCode(code string) (ErrorDefinition, bool) {
+func (h *hclDatasource) FindByCode(code string) (errorDefinition, bool) {
 	err, ok := h.list[code]
 	if !ok {
 		// if we cannot find the error by code, create one
-		return ErrorDefinition{
+		return errorDefinition{
 			Code: code,
 		}, false
 	}
@@ -115,7 +132,7 @@ func NewHCLDatasource(path string) (DataSource, error) {
 
 	db, err := parseHCL(path)
 	if err != nil {
-		return nil, NewInvalidDatasourceErr(err)
+		return nil, err
 	}
 
 	return db, nil
@@ -128,8 +145,8 @@ func parseHCL(path string) (*hclDatasource, error) {
 	}
 
 	b, err := io.ReadAll(f)
-	if err != nil {
-		return nil, err
+	if err != nil || len(b) == 0 {
+		return nil, NewInvalidDatasourceErr(err)
 	}
 
 	var db hclDatasource

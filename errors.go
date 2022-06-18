@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-type Error struct {
+type erratum struct {
 	Code       string
 	Message    string
 	Cause      string
@@ -28,196 +28,91 @@ type Error struct {
 	wrapped error
 }
 
-func (e Error) Unwrap() error {
+func (e erratum) Unwrap() error {
 	return e.wrapped
 }
 
-func (e Error) UUID() string {
+func (e erratum) UUID() string {
 	if e.uuid == "" {
 		e.uuid = generateReference(e.Code)
 	}
 	return e.uuid
 }
 
-func (e Error) Error() string {
+func (e erratum) Error() string {
 	message := fmt.Sprintf("[errata-%s] [%s:%v] %s. For more details, see %s.\n↳ %s", e.Code, e.file, e.line, e.Message, e.HelpURL(), e.Unwrap())
 	return fmt.Sprintf(message, e.Args...)
 }
 
-func (e Error) HelpURL() string {
+func (e erratum) HelpURL() string {
 	return fmt.Sprintf("https://dannykopping.github.io/errata/errata/%s", e.Code)
 }
 
 const (
-	ErrCodeGen                = "code-gen"
-	ErrFileNotFound           = "file-not-found"
-	ErrFileNotReadable        = "file-not-readable"
-	ErrInvalidDatasource      = "invalid-datasource"
-	ErrInvalidDefinitions     = "invalid-definitions"
-	ErrInvalidSyntax          = "invalid-syntax"
-	ErrMarkdownRender         = "markdown-render"
-	ErrServeSearchIndex       = "serve-search-index"
-	ErrServeSearchMissingTerm = "serve-search-missing-term"
-	ErrServeUnknownCode       = "serve-unknown-code"
-	ErrServeWebUi             = "serve-web-ui"
-	ErrTemplateExecution      = "template-execution"
-	ErrTemplateNotFound       = "template-not-found"
-	ErrTemplateNotReadable    = "template-not-readable"
-	ErrTemplateSyntax         = "template-syntax"
+	CodeGenErrCode                string = "code-gen"
+	FileNotFoundErrCode           string = "file-not-found"
+	FileNotReadableErrCode        string = "file-not-readable"
+	InvalidDatasourceErrCode      string = "invalid-datasource"
+	InvalidDefinitionsErrCode     string = "invalid-definitions"
+	InvalidSyntaxErrCode          string = "invalid-syntax"
+	MarkdownRenderErrCode         string = "markdown-render"
+	ServeSearchIndexErrCode       string = "serve-search-index"
+	ServeSearchMissingTermErrCode string = "serve-search-missing-term"
+	ServeUnknownCodeErrCode       string = "serve-unknown-code"
+	ServeWebUiErrCode             string = "serve-web-ui"
+	TemplateExecutionErrCode      string = "template-execution"
+	TemplateNotFoundErrCode       string = "template-not-found"
+	TemplateNotReadableErrCode    string = "template-not-readable"
+	TemplateSyntaxErrCode         string = "template-syntax"
 )
 
-var list = map[string]Error{
-	ErrCodeGen: {
-		Code:       ErrCodeGen,
-		Message:    `Code generation failed`,
-		Cause:      ``,
-		Categories: []string{"codegen"},
-		Labels:     map[string]string{},
-		Guide:      ``,
-	},
-
-	ErrFileNotFound: {
-		Code:       ErrFileNotFound,
-		Message:    `File path %q is incorrect or inaccessible`,
-		Cause:      ``,
-		Categories: []string{"file"},
-		Labels: map[string]string{
-			"level": "warning",
-		},
-		Guide: `Ensure the given file exists and can be access by errata`,
-	},
-
-	ErrFileNotReadable: {
-		Code:       ErrFileNotReadable,
-		Message:    `File %q is unreadable`,
-		Cause:      ``,
-		Categories: []string{"file"},
-		Labels: map[string]string{
-			"level": "warning",
-		},
-		Guide: `Ensure the given file can be read by errata`,
-	},
-
-	ErrInvalidDatasource: {
-		Code:       ErrInvalidDatasource,
-		Message:    `Datasource is invalid`,
-		Cause:      ``,
-		Categories: []string{"datasource"},
-		Labels:     map[string]string{},
-		Guide:      `Check the given datasource file for errors`,
-	},
-
-	ErrInvalidDefinitions: {
-		Code:       ErrInvalidDefinitions,
-		Message:    `One or more definitions declared in %q are invalid`,
-		Cause:      ``,
-		Categories: []string{"definitions", "validation"},
-		Labels: map[string]string{
-			"level": "error",
-		},
-		Guide: `Review the error(s) and try again`,
-	},
-
-	ErrInvalidSyntax: {
-		Code:       ErrInvalidSyntax,
-		Message:    `File is malformed`,
-		Cause:      ``,
-		Categories: []string{"parsing"},
-		Labels:     map[string]string{},
-		Guide:      `Check the given datasource file for syntax errors`,
-	},
-
-	ErrMarkdownRender: {
-		Code:       ErrMarkdownRender,
-		Message:    `Markdown rendering failed`,
-		Cause:      ``,
-		Categories: []string{"web-ui"},
-		Labels:     map[string]string{},
-		Guide:      ``,
-	},
-
-	ErrServeSearchIndex: {
-		Code:       ErrServeSearchIndex,
-		Message:    `Failed to build search index`,
-		Cause:      ``,
-		Categories: []string{"serve", "web-ui", "search"},
-		Labels:     map[string]string{},
-		Guide:      ``,
-	},
-
-	ErrServeSearchMissingTerm: {
-		Code:       ErrServeSearchMissingTerm,
-		Message:    `Search request is missing a "term" query string parameter`,
-		Cause:      ``,
-		Categories: []string{"serve", "web-ui", "search"},
-		Labels:     map[string]string{},
-		Guide:      ``,
-	},
-
-	ErrServeUnknownCode: {
-		Code:       ErrServeUnknownCode,
-		Message:    `Cannot find error definition for given code %q`,
-		Cause:      ``,
-		Categories: []string{"serve", "web-ui"},
-		Labels:     map[string]string{},
-		Guide:      ``,
-	},
-
-	ErrServeWebUi: {
-		Code:       ErrServeWebUi,
-		Message:    `Cannot serve web UI for datasource %q`,
-		Cause:      ``,
-		Categories: []string{"serve", "web-ui"},
-		Labels:     map[string]string{},
-		Guide:      ``,
-	},
-
-	ErrTemplateExecution: {
-		Code:       ErrTemplateExecution,
-		Message:    `Error in template execution`,
-		Cause:      `Possible use of missing or renamed field`,
-		Categories: []string{"codegen"},
-		Labels:     map[string]string{},
-		Guide:      ``,
-	},
-
-	ErrTemplateNotFound: {
-		Code:       ErrTemplateNotFound,
-		Message:    `Template path is incorrect or inaccessible`,
-		Cause:      ``,
-		Categories: []string{"file"},
-		Labels:     map[string]string{},
-		Guide:      ``,
-	},
-
-	ErrTemplateNotReadable: {
-		Code:       ErrTemplateNotReadable,
-		Message:    `Template path is unreadable`,
-		Cause:      ``,
-		Categories: []string{"file"},
-		Labels:     map[string]string{},
-		Guide:      ``,
-	},
-
-	ErrTemplateSyntax: {
-		Code:       ErrTemplateSyntax,
-		Message:    `Syntax error in template`,
-		Cause:      ``,
-		Categories: []string{"codegen"},
-		Labels:     map[string]string{},
-		Guide:      ``,
-	},
+type CodeGenErr struct {
+	erratum
+}
+type FileNotFoundErr struct {
+	erratum
+}
+type FileNotReadableErr struct {
+	erratum
+}
+type InvalidDatasourceErr struct {
+	erratum
+}
+type InvalidDefinitionsErr struct {
+	erratum
+}
+type InvalidSyntaxErr struct {
+	erratum
+}
+type MarkdownRenderErr struct {
+	erratum
+}
+type ServeSearchIndexErr struct {
+	erratum
+}
+type ServeSearchMissingTermErr struct {
+	erratum
+}
+type ServeUnknownCodeErr struct {
+	erratum
+}
+type ServeWebUiErr struct {
+	erratum
+}
+type TemplateExecutionErr struct {
+	erratum
+}
+type TemplateNotFoundErr struct {
+	erratum
+}
+type TemplateNotReadableErr struct {
+	erratum
+}
+type TemplateSyntaxErr struct {
+	erratum
 }
 
-func NewFromCode(code string, wrapped error) Error {
-	err := list[code]
-	err.wrapped = wrapped
-
-	addCaller(&err)
-	return err
-}
-
-func addCaller(err *Error) {
+func addCaller(err *erratum) {
 	_, file, line, ok := runtime.Caller(3)
 	if ok {
 		paths := strings.Split(file, string(os.PathSeparator))
@@ -234,92 +129,263 @@ func generateReference(code string) string {
 	return fmt.Sprintf("%x", sha1.Sum([]byte(code+time.Now().Format(time.RFC3339Nano))))
 }
 
-func NewCodeGenErr(wrapped error) Error {
-	err := NewFromCode(ErrCodeGen, wrapped)
-	err.Args = []interface{}{}
-	return err
+func NewCodeGenErr(wrapped error) CodeGenErr {
+	err := erratum{
+		Code:       CodeGenErrCode,
+		Message:    `Code generation failed`,
+		Cause:      ``,
+		Categories: []string{"codegen"},
+		Labels:     map[string]string{},
+		Guide:      ``,
+
+		Args:    []interface{}{},
+		wrapped: wrapped,
+	}
+
+	addCaller(&err)
+	return CodeGenErr{err}
 }
 
-func NewFileNotFoundErr(wrapped error, path string) Error {
-	err := NewFromCode(ErrFileNotFound, wrapped)
-	err.Args = []interface{}{path}
-	return err
+func NewFileNotFoundErr(wrapped error, path string) FileNotFoundErr {
+	err := erratum{
+		Code:       FileNotFoundErrCode,
+		Message:    `File path %q is incorrect or inaccessible`,
+		Cause:      ``,
+		Categories: []string{"file"},
+		Labels: map[string]string{
+			"level": "warning",
+		},
+		Guide: `Ensure the given file exists and can be access by errata`,
+
+		Args:    []interface{}{path},
+		wrapped: wrapped,
+	}
+
+	addCaller(&err)
+	return FileNotFoundErr{err}
 }
 
-func NewFileNotReadableErr(wrapped error, path string) Error {
-	err := NewFromCode(ErrFileNotReadable, wrapped)
-	err.Args = []interface{}{path}
-	return err
+func NewFileNotReadableErr(wrapped error, path string) FileNotReadableErr {
+	err := erratum{
+		Code:       FileNotReadableErrCode,
+		Message:    `File %q is unreadable`,
+		Cause:      ``,
+		Categories: []string{"file"},
+		Labels: map[string]string{
+			"level": "warning",
+		},
+		Guide: `Ensure the given file can be read by errata`,
+
+		Args:    []interface{}{path},
+		wrapped: wrapped,
+	}
+
+	addCaller(&err)
+	return FileNotReadableErr{err}
 }
 
-func NewInvalidDatasourceErr(wrapped error) Error {
-	err := NewFromCode(ErrInvalidDatasource, wrapped)
-	err.Args = []interface{}{}
-	return err
+func NewInvalidDatasourceErr(wrapped error) InvalidDatasourceErr {
+	err := erratum{
+		Code:       InvalidDatasourceErrCode,
+		Message:    `Datasource is invalid`,
+		Cause:      ``,
+		Categories: []string{"datasource"},
+		Labels:     map[string]string{},
+		Guide:      `Check the given datasource file for errors`,
+
+		Args:    []interface{}{},
+		wrapped: wrapped,
+	}
+
+	addCaller(&err)
+	return InvalidDatasourceErr{err}
 }
 
-func NewInvalidDefinitionsErr(wrapped error, path string) Error {
-	err := NewFromCode(ErrInvalidDefinitions, wrapped)
-	err.Args = []interface{}{path}
-	return err
+func NewInvalidDefinitionsErr(wrapped error, path string) InvalidDefinitionsErr {
+	err := erratum{
+		Code:       InvalidDefinitionsErrCode,
+		Message:    `One or more definitions declared in %q are invalid`,
+		Cause:      ``,
+		Categories: []string{"definitions", "validation"},
+		Labels: map[string]string{
+			"level": "error",
+		},
+		Guide: `Review the error(s) and try again`,
+
+		Args:    []interface{}{path},
+		wrapped: wrapped,
+	}
+
+	addCaller(&err)
+	return InvalidDefinitionsErr{err}
 }
 
-func NewInvalidSyntaxErr(wrapped error) Error {
-	err := NewFromCode(ErrInvalidSyntax, wrapped)
-	err.Args = []interface{}{}
-	return err
+func NewInvalidSyntaxErr(wrapped error) InvalidSyntaxErr {
+	err := erratum{
+		Code:       InvalidSyntaxErrCode,
+		Message:    `File is malformed`,
+		Cause:      ``,
+		Categories: []string{"parsing"},
+		Labels:     map[string]string{},
+		Guide:      `Check the given datasource file for syntax errors`,
+
+		Args:    []interface{}{},
+		wrapped: wrapped,
+	}
+
+	addCaller(&err)
+	return InvalidSyntaxErr{err}
 }
 
-func NewMarkdownRenderErr(wrapped error) Error {
-	err := NewFromCode(ErrMarkdownRender, wrapped)
-	err.Args = []interface{}{}
-	return err
+func NewMarkdownRenderErr(wrapped error) MarkdownRenderErr {
+	err := erratum{
+		Code:       MarkdownRenderErrCode,
+		Message:    `Markdown rendering failed`,
+		Cause:      ``,
+		Categories: []string{"web-ui"},
+		Labels:     map[string]string{},
+		Guide:      ``,
+
+		Args:    []interface{}{},
+		wrapped: wrapped,
+	}
+
+	addCaller(&err)
+	return MarkdownRenderErr{err}
 }
 
-func NewServeSearchIndexErr(wrapped error) Error {
-	err := NewFromCode(ErrServeSearchIndex, wrapped)
-	err.Args = []interface{}{}
-	return err
+func NewServeSearchIndexErr(wrapped error) ServeSearchIndexErr {
+	err := erratum{
+		Code:       ServeSearchIndexErrCode,
+		Message:    `Failed to build search index`,
+		Cause:      ``,
+		Categories: []string{"serve", "web-ui", "search"},
+		Labels:     map[string]string{},
+		Guide:      ``,
+
+		Args:    []interface{}{},
+		wrapped: wrapped,
+	}
+
+	addCaller(&err)
+	return ServeSearchIndexErr{err}
 }
 
-func NewServeSearchMissingTermErr(wrapped error) Error {
-	err := NewFromCode(ErrServeSearchMissingTerm, wrapped)
-	err.Args = []interface{}{}
-	return err
+func NewServeSearchMissingTermErr(wrapped error) ServeSearchMissingTermErr {
+	err := erratum{
+		Code:       ServeSearchMissingTermErrCode,
+		Message:    `Search request is missing a "term" query string parameter`,
+		Cause:      ``,
+		Categories: []string{"serve", "web-ui", "search"},
+		Labels:     map[string]string{},
+		Guide:      ``,
+
+		Args:    []interface{}{},
+		wrapped: wrapped,
+	}
+
+	addCaller(&err)
+	return ServeSearchMissingTermErr{err}
 }
 
-func NewServeUnknownCodeErr(wrapped error, code string) Error {
-	err := NewFromCode(ErrServeUnknownCode, wrapped)
-	err.Args = []interface{}{code}
-	return err
+func NewServeUnknownCodeErr(wrapped error, code string) ServeUnknownCodeErr {
+	err := erratum{
+		Code:       ServeUnknownCodeErrCode,
+		Message:    `Cannot find error definition for given code %q`,
+		Cause:      ``,
+		Categories: []string{"serve", "web-ui"},
+		Labels:     map[string]string{},
+		Guide:      ``,
+
+		Args:    []interface{}{code},
+		wrapped: wrapped,
+	}
+
+	addCaller(&err)
+	return ServeUnknownCodeErr{err}
 }
 
-func NewServeWebUiErr(wrapped error, path string) Error {
-	err := NewFromCode(ErrServeWebUi, wrapped)
-	err.Args = []interface{}{path}
-	return err
+func NewServeWebUiErr(wrapped error, path string) ServeWebUiErr {
+	err := erratum{
+		Code:       ServeWebUiErrCode,
+		Message:    `Cannot serve web UI for datasource %q`,
+		Cause:      ``,
+		Categories: []string{"serve", "web-ui"},
+		Labels:     map[string]string{},
+		Guide:      ``,
+
+		Args:    []interface{}{path},
+		wrapped: wrapped,
+	}
+
+	addCaller(&err)
+	return ServeWebUiErr{err}
 }
 
-func NewTemplateExecutionErr(wrapped error) Error {
-	err := NewFromCode(ErrTemplateExecution, wrapped)
-	err.Args = []interface{}{}
-	return err
+func NewTemplateExecutionErr(wrapped error) TemplateExecutionErr {
+	err := erratum{
+		Code:       TemplateExecutionErrCode,
+		Message:    `Error in template execution`,
+		Cause:      `Possible use of missing or renamed field`,
+		Categories: []string{"codegen"},
+		Labels:     map[string]string{},
+		Guide:      ``,
+
+		Args:    []interface{}{},
+		wrapped: wrapped,
+	}
+
+	addCaller(&err)
+	return TemplateExecutionErr{err}
 }
 
-func NewTemplateNotFoundErr(wrapped error) Error {
-	err := NewFromCode(ErrTemplateNotFound, wrapped)
-	err.Args = []interface{}{}
-	return err
+func NewTemplateNotFoundErr(wrapped error) TemplateNotFoundErr {
+	err := erratum{
+		Code:       TemplateNotFoundErrCode,
+		Message:    `Template path is incorrect or inaccessible`,
+		Cause:      ``,
+		Categories: []string{"file"},
+		Labels:     map[string]string{},
+		Guide:      ``,
+
+		Args:    []interface{}{},
+		wrapped: wrapped,
+	}
+
+	addCaller(&err)
+	return TemplateNotFoundErr{err}
 }
 
-func NewTemplateNotReadableErr(wrapped error) Error {
-	err := NewFromCode(ErrTemplateNotReadable, wrapped)
-	err.Args = []interface{}{}
-	return err
+func NewTemplateNotReadableErr(wrapped error) TemplateNotReadableErr {
+	err := erratum{
+		Code:       TemplateNotReadableErrCode,
+		Message:    `Template path is unreadable`,
+		Cause:      ``,
+		Categories: []string{"file"},
+		Labels:     map[string]string{},
+		Guide:      ``,
+
+		Args:    []interface{}{},
+		wrapped: wrapped,
+	}
+
+	addCaller(&err)
+	return TemplateNotReadableErr{err}
 }
 
-func NewTemplateSyntaxErr(wrapped error) Error {
-	err := NewFromCode(ErrTemplateSyntax, wrapped)
-	err.Args = []interface{}{}
-	return err
+func NewTemplateSyntaxErr(wrapped error) TemplateSyntaxErr {
+	err := erratum{
+		Code:       TemplateSyntaxErrCode,
+		Message:    `Syntax error in template`,
+		Cause:      ``,
+		Categories: []string{"codegen"},
+		Labels:     map[string]string{},
+		Guide:      ``,
+
+		Args:    []interface{}{},
+		wrapped: wrapped,
+	}
+
+	addCaller(&err)
+	return TemplateSyntaxErr{err}
 }
