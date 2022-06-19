@@ -5,13 +5,13 @@ import (
 )
 
 func Generate(data CodeGen, w io.Writer) error {
-	source, err := NewHCLDatasource(data.File)
+	source, err := NewHCLDatasource(data.Source)
 	if err != nil {
 		return err
 	}
 
 	if err := source.Validate(); err != nil {
-		return NewInvalidDefinitionsErr(err, data.File)
+		return NewInvalidDefinitionsErr(err, data.Source)
 	}
 
 	loader, err := loaderFromPath(data.Template)
@@ -28,7 +28,7 @@ func Generate(data CodeGen, w io.Writer) error {
 
 	renderer := createPongo2Renderer(loader)
 	if err = renderer.render(tmplData, w); err != nil {
-		return err
+		return NewCodeGenErr(err)
 	}
 
 	return nil

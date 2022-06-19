@@ -29,13 +29,13 @@ type Server struct {
 }
 
 func NewServer(cfg WebUI) (*Server, error) {
-	source, err := NewHCLDatasource(cfg.DatabaseFile)
+	source, err := NewHCLDatasource(cfg.Source)
 	if err != nil {
 		return nil, err
 	}
 
 	srv := &Server{
-		File: cfg.DatabaseFile,
+		File: cfg.Source,
 		db:   source,
 	}
 

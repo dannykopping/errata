@@ -15,9 +15,8 @@ func main() {
 	)
 
 	app := &cli.App{
-		Name:     "EISH",
-		Usage:    "Errata Interactive SHell",
-		HideHelp: true,
+		Name:  "EISH",
+		Usage: "Errata Interactive SHell",
 		Authors: []*cli.Author{
 			{
 				Name:  "Danny Kopping",
@@ -26,13 +25,13 @@ func main() {
 		},
 		Commands: []*cli.Command{
 			{
-				Name:     "generate",
-				HideHelp: true,
+				Name:        "generate",
+				Description: "Generate errata from source",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:        "eds.file",
+						Name:        "source",
 						Required:    true,
-						Destination: &codeGen.File,
+						Destination: &codeGen.Source,
 					},
 					&cli.StringFlag{
 						Name:        "template",
@@ -54,15 +53,15 @@ func main() {
 				HideHelp: true,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:        "eds.file",
+						Name:        "source",
 						Required:    true,
-						Destination: &webUI.DatabaseFile,
+						Destination: &webUI.Source,
 					},
 				},
 				Action: func(_ *cli.Context) error {
 					srv, err := errata.NewServer(webUI)
 					if err != nil {
-						return errata.NewServeWebUiErr(err, codeGen.File)
+						return errata.NewServeWebUiErr(err, webUI.Source)
 					}
 
 					return errata.Serve(srv)
@@ -74,14 +73,6 @@ func main() {
 	err := app.Run(os.Args)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
-
-		// TODO: define exit codes as labels
-		//var e errata.Error
-		//if errors.As(err, &e) {
-		//	if code := e.Interfaces.ShellExitCode; code > 0 {
-		//		os.Exit(code)
-		//	}
-		//}
 
 		os.Exit(1)
 	}

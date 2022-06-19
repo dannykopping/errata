@@ -1,11 +1,11 @@
 package errata
 
 type WebUI struct {
-	DatabaseFile string
+	Source string
 }
 
 type CodeGen struct {
-	File     string
+	Source   string
 	Template string
 	Package  string
 }

@@ -18,7 +18,7 @@ func TestGenerate(t *testing.T) {
 		{
 			name: "basic",
 			args: CodeGen{
-				File:     "fixtures/basic.hcl",
+				Source:   "fixtures/basic.hcl",
 				Template: "fixtures/basic.tmpl",
 				Package:  "errata",
 			},
@@ -29,7 +29,7 @@ func TestGenerate(t *testing.T) {
 		{
 			name: "variable substitution",
 			args: CodeGen{
-				File:     "fixtures/basic.hcl",
+				Source:   "fixtures/basic.hcl",
 				Template: "fixtures/substitution.tmpl",
 				Package:  "errata",
 			},
@@ -40,7 +40,7 @@ func TestGenerate(t *testing.T) {
 		{
 			name: "golang",
 			args: CodeGen{
-				File:     "fixtures/basic.hcl",
+				Source:   "fixtures/basic.hcl",
 				Template: "golang",
 				Package:  "errata",
 			},
@@ -51,7 +51,7 @@ func TestGenerate(t *testing.T) {
 		{
 			name: "missing builtin template",
 			args: CodeGen{
-				File:     "fixtures/basic.hcl",
+				Source:   "fixtures/basic.hcl",
 				Template: "missing",
 				Package:  "errata",
 			},
@@ -64,7 +64,7 @@ func TestGenerate(t *testing.T) {
 		{
 			name: "missing provided template",
 			args: CodeGen{
-				File:     "fixtures/basic.hcl",
+				Source:   "fixtures/basic.hcl",
 				Template: "fixtures/missing.tmpl",
 				Package:  "errata",
 			},
@@ -77,7 +77,7 @@ func TestGenerate(t *testing.T) {
 		{
 			name: "template syntax error",
 			args: CodeGen{
-				File:     "fixtures/basic.hcl",
+				Source:   "fixtures/basic.hcl",
 				Template: "fixtures/invalid-syntax.tmpl",
 				Package:  "errata",
 			},
