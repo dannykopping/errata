@@ -14,3 +14,7 @@ error "code-3" {
   message = "This one has a guide file"
   guide = file("fixtures/guide.md")
 }
+error "code-4" {
+  message = "This one has a guide as a string"
+  guide = "# Hello Errata"
+}

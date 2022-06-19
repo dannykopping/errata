@@ -176,7 +176,8 @@ func parseHCL(path string) (*hclDatasource, error) {
 				Type: function.StaticReturnType(cty.String),
 				Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 					path := filepath.Clean(args[0].AsString())
-					return cty.StringVal(fmt.Sprintf("file://%s", path)), err
+					guide, err := guideFromFile(path)
+					return cty.StringVal(guide), err
 				},
 			}),
 		},
@@ -189,4 +190,18 @@ func parseHCL(path string) (*hclDatasource, error) {
 	db.load()
 	db.source = b
 	return &db, nil
+}
+
+func guideFromFile(path string) (string, error) {
+	_, err := os.Open(path)
+	if err != nil {
+		return "", NewFileNotFoundErr(err, path)
+	}
+
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return "", NewFileNotReadableErr(err, path)
+	}
+
+	return string(b), nil
 }

@@ -49,8 +49,23 @@ func TestNewHCLDatasource(t *testing.T) {
 				"code-3": {
 					Code:    "code-3",
 					Message: "This one has a guide file",
-					Guide:   "file://fixtures/guide.md",
+					Guide:   "# Hello Errata",
 				},
+				"code-4": {
+					Code:    "code-4",
+					Message: "This one has a guide as a string",
+					Guide:   "# Hello Errata",
+				},
+			},
+		},
+		{
+			name:    "missing guide file",
+			fixture: "fixtures/missing-guide.hcl",
+			expectedErr: func(err error) (error, bool) {
+				// this is not actually the error we want, but hclsimple swallows the original error without wrapping it
+				var expected InvalidSyntaxErr
+				ok := errors.As(err, &expected)
+				return expected, ok
 			},
 		},
 		{
