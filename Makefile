@@ -4,4 +4,6 @@ eish:
 	go build -o eish cmd/eish/*.go
 
 generate-errata:
-	./eish generate --source=errata.hcl --template golang --package errata > /tmp/x && gofmt /tmp/x > errata.go
+	$(eval TMPFILE := $(shell mktemp))
+	./eish generate --source=errata.hcl --template golang --package errata > $(TMPFILE) && gofmt $(TMPFILE) > errata.go
+	rm $(TMPFILE)
