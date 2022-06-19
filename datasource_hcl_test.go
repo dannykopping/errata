@@ -72,15 +72,6 @@ func TestNewHCLDatasource(t *testing.T) {
 			},
 		},
 		{
-			name:    "unreadable database",
-			fixture: "fixtures/unreadable.hcl",
-			expectedErr: func(err error) (error, bool) {
-				var expected FileNotReadableErr
-				ok := errors.As(err, &expected)
-				return expected, ok
-			},
-		},
-		{
 			name:    "empty database",
 			fixture: "fixtures/empty.hcl",
 			expectedErr: func(err error) (error, bool) {

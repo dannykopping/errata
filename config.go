@@ -5,8 +5,7 @@ type WebUI struct {
 }
 
 type CodeGen struct {
-	File          string
-	Lang          string
-	Package       string
-	IndexLocation string
+	File     string
+	Template string
+	Package  string
 }

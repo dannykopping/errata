@@ -9,7 +9,7 @@ options {
 error "file-not-found" {
   message    = "File path %q is incorrect or inaccessible"
   categories = ["file"]
-  guide      = "Ensure the given file exists and can be access by errata"
+  guide      = "Ensure the given file exists and can be accessed by errata"
   args       = [
     arg("path", "string")
   ]

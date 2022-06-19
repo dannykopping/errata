@@ -35,9 +35,9 @@ func main() {
 						Destination: &codeGen.File,
 					},
 					&cli.StringFlag{
-						Name:        "language",
+						Name:        "template",
 						Value:       "golang",
-						Destination: &codeGen.Lang,
+						Destination: &codeGen.Template,
 					},
 					&cli.StringFlag{
 						Name:        "package",
