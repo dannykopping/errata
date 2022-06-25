@@ -6,7 +6,7 @@ import (
 	"github.com/go-kit/log"
 )
 
-func Generate(logger log.Logger, data CodeGen, w io.Writer) error {
+func Generate(logger log.Logger, data CodeGenConfig, w io.Writer) error {
 	source, err := NewHCLDatasource(data.Source)
 	if err != nil {
 		return err

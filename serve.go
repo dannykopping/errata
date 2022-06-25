@@ -12,6 +12,7 @@ import (
 	"github.com/blevesearch/bleve/v2"
 	"github.com/flosch/pongo2/v5"
 	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"github.com/gorilla/mux"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/renderer/html"
@@ -25,21 +26,23 @@ var (
 type Server struct {
 	File string
 
-	logger log.Logger
-	db     DataSource
-	idx    bleve.Index
+	logger   log.Logger
+	db       DataSource
+	idx      bleve.Index
+	bindAddr string
 }
 
-func NewServer(logger log.Logger, cfg WebUI) (*Server, error) {
+func NewServer(logger log.Logger, cfg WebUIConfig) (*Server, error) {
 	source, err := NewHCLDatasource(cfg.Source)
 	if err != nil {
 		return nil, err
 	}
 
 	srv := &Server{
-		File:   cfg.Source,
-		db:     source,
-		logger: log.With(logger, "component", "web"),
+		File:     cfg.Source,
+		db:       source,
+		logger:   log.With(logger, "component", "web"),
+		bindAddr: cfg.BindAddr,
 	}
 
 	md := goldmark.New(
@@ -197,7 +200,8 @@ func Serve(srv *Server) error {
 	r.HandleFunc("/code/{code}", srv.Item).Methods(http.MethodGet)
 	r.HandleFunc("/search", srv.Search).Methods(http.MethodGet)
 
-	return http.ListenAndServe("localhost:33707", r)
+	level.Info(srv.logger).Log("msg", "web UI started", "bind-addr", srv.bindAddr)
+	return http.ListenAndServe(srv.bindAddr, r)
 }
 
 func renderMarkdown(source DataSource) {

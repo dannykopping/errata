@@ -11,8 +11,8 @@ import (
 
 func main() {
 	var (
-		codeGen errata.CodeGen
-		webUI   errata.WebUI
+		codeGen errata.CodeGenConfig
+		webUI   errata.WebUIConfig
 	)
 
 	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
@@ -59,6 +59,11 @@ func main() {
 						Name:        "source",
 						Required:    true,
 						Destination: &webUI.Source,
+					},
+					&cli.StringFlag{
+						Name:        "bind-addr",
+						Value:       "0.0.0.0:37707",
+						Destination: &webUI.BindAddr,
 					},
 				},
 				Action: func(_ *cli.Context) error {

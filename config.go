@@ -1,10 +1,11 @@
 package errata
 
-type WebUI struct {
-	Source string
+type WebUIConfig struct {
+	Source   string
+	BindAddr string
 }
 
-type CodeGen struct {
+type CodeGenConfig struct {
 	Source   string
 	Template string
 	Package  string

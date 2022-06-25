@@ -11,13 +11,13 @@ import (
 func TestGenerate(t *testing.T) {
 	tests := []struct {
 		name        string
-		args        CodeGen
+		args        CodeGenConfig
 		assertion   func(t *testing.T, output string)
 		expectedErr func(err error) (error, bool)
 	}{
 		{
 			name: "basic",
-			args: CodeGen{
+			args: CodeGenConfig{
 				Source:   "fixtures/basic.hcl",
 				Template: "fixtures/basic.tmpl",
 				Package:  "errata",
@@ -28,7 +28,7 @@ func TestGenerate(t *testing.T) {
 		},
 		{
 			name: "variable substitution",
-			args: CodeGen{
+			args: CodeGenConfig{
 				Source:   "fixtures/basic.hcl",
 				Template: "fixtures/substitution.tmpl",
 				Package:  "errata",
@@ -39,7 +39,7 @@ func TestGenerate(t *testing.T) {
 		},
 		{
 			name: "golang",
-			args: CodeGen{
+			args: CodeGenConfig{
 				Source:   "fixtures/basic.hcl",
 				Template: "golang",
 				Package:  "errata",
@@ -50,7 +50,7 @@ func TestGenerate(t *testing.T) {
 		},
 		{
 			name: "missing builtin template",
-			args: CodeGen{
+			args: CodeGenConfig{
 				Source:   "fixtures/basic.hcl",
 				Template: "missing",
 				Package:  "errata",
@@ -63,7 +63,7 @@ func TestGenerate(t *testing.T) {
 		},
 		{
 			name: "missing provided template",
-			args: CodeGen{
+			args: CodeGenConfig{
 				Source:   "fixtures/basic.hcl",
 				Template: "fixtures/missing.tmpl",
 				Package:  "errata",
@@ -76,7 +76,7 @@ func TestGenerate(t *testing.T) {
 		},
 		{
 			name: "template syntax error",
-			args: CodeGen{
+			args: CodeGenConfig{
 				Source:   "fixtures/basic.hcl",
 				Template: "fixtures/invalid-syntax.tmpl",
 				Package:  "errata",
