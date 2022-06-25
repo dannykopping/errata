@@ -1,8 +1,8 @@
 version = "0.1"
 
 options {
-  prefix   = "errata-"
-  base_url = "https://dannykopping.github.io/errata/errata/"
+  prefix      = "errata-"
+  base_url    = "https://dannykopping.github.io/errata/errata/"
   description = "Below is a set of errors that the `eish` program can return."
 }
 
@@ -14,7 +14,7 @@ error "file-not-found" {
     arg("path", "string")
   ]
   labels     = {
-    level : "warning",
+    log_level : "warning",
   }
 }
 error "file-not-readable" {
@@ -25,7 +25,7 @@ error "file-not-readable" {
     arg("path", "string")
   ]
   labels     = {
-    level : "warning",
+    log_level : "warning",
   }
 }
 error "invalid-definitions" {
@@ -36,7 +36,7 @@ error "invalid-definitions" {
     arg("path", "string")
   ]
   labels     = {
-    level : "error",
+    log_level : "error",
   }
 }
 
@@ -91,6 +91,10 @@ error "serve-unknown-code" {
     arg("code", "string")
   ]
   categories = ["serve", "web-ui"]
+  labels     = {
+    log_level = "warning"
+    http_status_code : "404",
+  }
 }
 error "serve-search-index" {
   message    = "Failed to build search index"

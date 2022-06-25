@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -181,9 +182,18 @@ func filterMarkdown(md goldmark.Markdown) func(in *pongo2.Value, param *pongo2.V
 func (s *Server) errorHandler(w http.ResponseWriter, err error) {
 	LogError(s.logger, err)
 
-	// TODO: pick HTTP status code if available
-	// 		 maybe with the pattern errata.HTTPStatusExtractor(err, default=http.StatusInternalServerError)?
-	http.Error(w, err.Error(), http.StatusInternalServerError)
+	statusCode := http.StatusInternalServerError
+	if e, ok := err.(HTTPStatusCodeExtractor); ok {
+		if c, cerr := strconv.ParseInt(e.GetHttpStatusCode(), 10, 16); cerr == nil {
+			statusCode = int(c)
+		}
+	}
+
+	http.Error(w, err.Error(), statusCode)
+}
+
+type HTTPStatusCodeExtractor interface {
+	GetHttpStatusCode() string
 }
 
 func Serve(srv *Server) error {
