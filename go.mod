@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/blevesearch/bleve/v2 v2.3.2
 	github.com/flosch/pongo2/v5 v5.0.0
+	github.com/go-kit/log v0.2.1
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/hcl/v2 v2.12.0
 	github.com/iancoleman/strcase v0.1.3
@@ -35,6 +36,7 @@ require (
 	github.com/blevesearch/zapx/v15 v15.3.3 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/golang/protobuf v1.3.4 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/go-cmp v0.3.1 // indirect
@@ -46,6 +48,5 @@ require (
 	go.etcd.io/bbolt v1.3.5 // indirect
 	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
 	golang.org/x/text v0.3.7 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )

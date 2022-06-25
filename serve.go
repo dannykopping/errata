@@ -11,6 +11,7 @@ import (
 
 	"github.com/blevesearch/bleve/v2"
 	"github.com/flosch/pongo2/v5"
+	"github.com/go-kit/log"
 	"github.com/gorilla/mux"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/renderer/html"
@@ -24,19 +25,21 @@ var (
 type Server struct {
 	File string
 
-	db  DataSource
-	idx bleve.Index
+	logger log.Logger
+	db     DataSource
+	idx    bleve.Index
 }
 
-func NewServer(cfg WebUI) (*Server, error) {
+func NewServer(logger log.Logger, cfg WebUI) (*Server, error) {
 	source, err := NewHCLDatasource(cfg.Source)
 	if err != nil {
 		return nil, err
 	}
 
 	srv := &Server{
-		File: cfg.Source,
-		db:   source,
+		File:   cfg.Source,
+		db:     source,
+		logger: log.With(logger, "component", "web"),
 	}
 
 	md := goldmark.New(
@@ -173,6 +176,8 @@ func filterMarkdown(md goldmark.Markdown) func(in *pongo2.Value, param *pongo2.V
 }
 
 func (s *Server) errorHandler(w http.ResponseWriter, err error) {
+	LogError(s.logger, err)
+
 	// TODO: pick HTTP status code if available
 	// 		 maybe with the pattern errata.HTTPStatusExtractor(err, default=http.StatusInternalServerError)?
 	http.Error(w, err.Error(), http.StatusInternalServerError)
