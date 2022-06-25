@@ -121,18 +121,18 @@ func (s *Server) render(w http.ResponseWriter, path string, data pongo2.Context)
 
 	_, err := web.Open(path)
 	if err != nil {
-		s.errorHandler(w, NewTemplateNotFoundErr(err))
+		s.errorHandler(w, NewFileNotFoundErr(err, path))
 		return
 	}
 
 	b, err := web.ReadFile(path)
 	if err != nil {
-		s.errorHandler(w, NewTemplateNotReadableErr(err))
+		s.errorHandler(w, NewFileNotReadableErr(err, path))
 	}
 
 	tmpl, err := pongo2.FromBytes(b)
 	if err != nil {
-		s.errorHandler(w, NewTemplateSyntaxErr(err))
+		s.errorHandler(w, NewInvalidSyntaxErr(err, path))
 		return
 	}
 
@@ -168,7 +168,7 @@ func filterMarkdown(md goldmark.Markdown) func(in *pongo2.Value, param *pongo2.V
 		mdErr := md.Convert([]byte(in.String()), &buf)
 		if mdErr != nil {
 			return nil, &pongo2.Error{
-				OrigError: NewMarkdownRenderErr(mdErr),
+				OrigError: NewMarkdownRenderingErr(mdErr),
 				Sender:    "filterMarkdown",
 			}
 		}
@@ -223,7 +223,10 @@ func renderMarkdown(source DataSource) {
 
 	for _, e := range source.List() {
 		if err := md.Convert([]byte(fmt.Sprintf("%s", e.Guide)), &buf); err != nil {
-			fmt.Println(NewMarkdownRenderErr(err))
+			LogError(NewMarkdownRenderingErr(err))
+
+			e.Guide = "<markdown rendering error>"
+			continue
 		}
 
 		e.Guide = buf.String()

@@ -29,7 +29,7 @@ func (p *pongo2Renderer) getTemplate() (*pongo2.Template, error) {
 	if !p.loader.builtin {
 		tmpl, err := pongo2.DefaultSet.FromFile(p.loader.path)
 		if err != nil {
-			return nil, NewTemplateSyntaxErr(err)
+			return nil, NewInvalidSyntaxErr(err, p.loader.path)
 		}
 
 		return tmpl, nil
@@ -37,12 +37,12 @@ func (p *pongo2Renderer) getTemplate() (*pongo2.Template, error) {
 
 	b, err := templates.ReadFile(p.loader.path)
 	if err != nil {
-		return nil, NewTemplateNotReadableErr(err)
+		return nil, NewFileNotReadableErr(err, p.loader.path)
 	}
 
 	tmpl, err := embeddedFS.FromBytes(b)
 	if err != nil {
-		return nil, NewTemplateSyntaxErr(err)
+		return nil, NewInvalidSyntaxErr(err, p.loader.path)
 	}
 
 	return tmpl, nil

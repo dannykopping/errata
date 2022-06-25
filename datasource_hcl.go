@@ -146,7 +146,7 @@ func parseHCL(path string) (*hclDatasource, error) {
 
 	b, err := io.ReadAll(f)
 	if err != nil || len(b) == 0 {
-		return nil, NewInvalidDatasourceErr(err)
+		return nil, NewInvalidDatasourceErr(err, path)
 	}
 
 	var db hclDatasource
@@ -184,7 +184,7 @@ func parseHCL(path string) (*hclDatasource, error) {
 	}, &db)
 
 	if err != nil {
-		return nil, NewInvalidSyntaxErr(err)
+		return nil, NewInvalidSyntaxErr(err, path)
 	}
 
 	db.load()

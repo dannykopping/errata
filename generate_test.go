@@ -56,7 +56,7 @@ func TestGenerate(t *testing.T) {
 				Package:  "errata",
 			},
 			expectedErr: func(err error) (error, bool) {
-				var expected TemplateNotFoundErr
+				var expected FileNotFoundErr
 				ok := errors.As(err, &expected)
 				return expected, ok
 			},
@@ -69,7 +69,7 @@ func TestGenerate(t *testing.T) {
 				Package:  "errata",
 			},
 			expectedErr: func(err error) (error, bool) {
-				var expected TemplateNotFoundErr
+				var expected FileNotFoundErr
 				ok := errors.As(err, &expected)
 				return expected, ok
 			},
@@ -82,7 +82,7 @@ func TestGenerate(t *testing.T) {
 				Package:  "errata",
 			},
 			expectedErr: func(err error) (error, bool) {
-				var expected TemplateSyntaxErr
+				var expected InvalidSyntaxErr
 				ok := errors.As(err, &expected)
 				return expected, ok
 			},

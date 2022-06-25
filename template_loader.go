@@ -28,7 +28,7 @@ func loaderFromPath(given string) (*templateLoader, error) {
 		path := fmt.Sprintf("templates/%s", file)
 		_, err := templates.Open(path)
 		if err != nil {
-			return nil, NewTemplateNotFoundErr(err)
+			return nil, NewFileNotFoundErr(err, path)
 		}
 
 		return &templateLoader{
@@ -40,7 +40,7 @@ func loaderFromPath(given string) (*templateLoader, error) {
 	// next try resolve the path literally
 	_, err := os.Stat(given)
 	if errors.Is(err, os.ErrNotExist) {
-		return nil, NewTemplateNotFoundErr(err)
+		return nil, NewFileNotFoundErr(err, given)
 	}
 
 	return &templateLoader{
