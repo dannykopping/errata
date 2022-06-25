@@ -18,13 +18,13 @@ import (
 )
 
 type erratum struct {
-	Code       string
-	Message    string
-	Cause      string
-	Categories []string
-	Args       []interface{}
-	Labels     map[string]string
-	Guide      string
+	code       string
+	message    string
+	cause      string
+	categories []string
+	args       []interface{}
+	labels     map[string]string
+	guide      string
 
 	file string
 	line int
@@ -33,27 +33,83 @@ type erratum struct {
 	wrapped error
 }
 
+// TODO: add documentation to all public methods
+
+// Erratum is the public interface which indicates that a given error is an Erratum.
+type Erratum interface {
+  // behave like a regular error
+	error
+	Unwrap() error
+
+	Code() string
+	Message() string
+	Cause() string
+	Categories() []string
+	Args() []interface{}
+	Guide() string
+	Labels() map[string]string
+
+	UUID() string
+	HelpURL() string
+}
+
 func (e erratum) Unwrap() error {
-  return e.wrapped
+	return e.wrapped
 }
 
 func (e erratum) UUID() string {
 	if e.uuid == "" {
-		e.uuid = generateReference(e.Code)
+		e.uuid = generateReference(e.code)
 	}
 	return e.uuid
 }
 
 func (e erratum) Error() string {
-	message := fmt.Sprintf("[errata-%s] [%s:%v] %s. For more details, see %s", e.Code, e.file, e.line, e.Message, e.HelpURL())
+	message := fmt.Sprintf("[errata-%s] [%s:%v] %s. For more details, see %s", e.code, e.file, e.line, e.message, e.HelpURL())
 	if unwrapped := e.Unwrap(); unwrapped != nil {
 		message = fmt.Sprintf("%s\n↳ %s", message, unwrapped.Error())
 	}
-	return fmt.Sprintf(message, e.Args...)
+	return fmt.Sprintf(message, e.Args()...)
 }
 
 func (e erratum) HelpURL() string {
-  return fmt.Sprintf("{{ Options.BaseURL }}%s", e.Code)
+  return fmt.Sprintf("{{ Options.BaseURL }}%s", e.code)
+}
+
+func (e erratum) Code() string {
+	return e.code
+}
+
+func (e erratum) Message() string {
+	return e.message
+}
+
+func (e erratum) Cause() string {
+	return e.cause
+}
+
+func (e erratum) Categories() []string {
+	return e.categories
+}
+
+func (e erratum) Args() []interface{} {
+	return e.args
+}
+
+func (e erratum) Labels() map[string]string {
+	return e.labels
+}
+
+func (e erratum) Guide() string {
+	return e.guide
+}
+
+func (e erratum) File() string {
+	return e.file
+}
+
+func (e erratum) Line() int {
+	return e.line
 }
 
 const (
@@ -67,6 +123,33 @@ type {{ code | constantize }}Err struct {
   erratum
 }
 {%- endfor %}
+
+{% for code, error in Errors sorted %}
+func New{{ code | constantize }}Err(wrapped error, {{ args(error.Args) }} {{ contexts(error.Definition.context) }}) {{ code | constantize }}Err {
+  err := erratum{
+    code: {{ code | constantize }}ErrCode,
+    message: `{{ error.Message -}}`,
+    cause: `{{ error.Cause }}`,
+    categories: []string{ {{- quote_list(error.Categories) -}} },
+    labels: map[string]string{ {{ quote_map(error.Labels) }} },
+    guide: `{{ error.Guide -}}`,
+
+    args: []interface{}{ {{ args_list(error.Args) }} },
+    wrapped: wrapped,
+  }
+
+  addCaller(&err)
+  return {{ code | constantize }}Err{err}
+}
+
+{% for label, value in error.Labels %}
+// Get{{ label | constantize }} returns the {{ label|stringformat:"%q" }} label for a {{ code | constantize }}Err instance.
+func (e {{ code | constantize }}Err) Get{{ label | constantize }}() string {
+  return {{ value | stringformat:"%q" }}
+}
+{% endfor -%}
+
+{% endfor -%}
 
 func addCaller(err *erratum) {
 	_, file, line, ok := runtime.Caller(3)
@@ -84,22 +167,3 @@ func addCaller(err *erratum) {
 func generateReference(code string) string {
 	return fmt.Sprintf("%x", sha1.Sum([]byte(code + time.Now().Format(time.RFC3339Nano))))
 }
-
-{% for code, error in Errors sorted %}
-func New{{ code | constantize }}Err(wrapped error, {{ args(error.Args) }} {{ contexts(error.Definition.context) }}) {{ code | constantize }}Err {
-  err := erratum{
-    Code: {{ code | constantize }}ErrCode,
-    Message: `{{ error.Message -}}`,
-    Cause: `{{ error.Cause }}`,
-    Categories: []string{ {{- quote_list(error.Categories) -}} },
-    Labels: map[string]string{ {{ quote_map(error.Labels) }} },
-    Guide: `{{ error.Guide -}}`,
-
-    Args: []interface{}{ {{ args_list(error.Args) }} },
-    wrapped: wrapped,
-  }
-
-  addCaller(&err)
-  return {{ code | constantize }}Err{err}
-}
-{% endfor -%}
