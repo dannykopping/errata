@@ -162,6 +162,14 @@ func (s *Server) Item(w http.ResponseWriter, req *http.Request) {
 	s.render(w, "web/single.gohtml", data)
 }
 
+func (s *Server) NotFound(w http.ResponseWriter, r *http.Request) {
+	s.errorHandler(w, NewServeUnknownRouteErr(nil, r.URL.Path))
+}
+
+func (s *Server) MethodNotAllowed(w http.ResponseWriter, r *http.Request) {
+	s.errorHandler(w, NewServeMethodNotAllowedErr(nil, r.Method, r.URL.Path))
+}
+
 func filterMarkdown(md goldmark.Markdown) func(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, err *pongo2.Error) {
 	return func(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, err *pongo2.Error) {
 		var buf bytes.Buffer
@@ -196,6 +204,7 @@ type HTTPStatusCodeExtractor interface {
 
 func Serve(srv *Server) error {
 	r := mux.NewRouter()
+
 	logger = log.With(logger, "component", "web")
 
 	webFS, err := fs.Sub(web, "web")
@@ -208,6 +217,8 @@ func Serve(srv *Server) error {
 	r.HandleFunc("/", srv.List)
 	r.HandleFunc("/code/{code}", srv.Item).Methods(http.MethodGet)
 	r.HandleFunc("/search", srv.Search).Methods(http.MethodGet)
+	r.NotFoundHandler = http.HandlerFunc(srv.NotFound)
+	r.MethodNotAllowedHandler = http.HandlerFunc(srv.MethodNotAllowed)
 
 	level.Info(logger).Log("msg", "web UI started", "bind-addr", srv.bindAddr)
 	return http.ListenAndServe(srv.bindAddr, r)

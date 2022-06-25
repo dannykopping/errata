@@ -108,6 +108,27 @@ error "serve-web-ui" {
     severity = "fatal"
   }
 }
+error "serve-unknown-route" {
+  message    = "Requested route %q not defined"
+  args       = [
+    arg("route", "string")
+  ]
+  categories = ["serve", "web-ui"]
+  labels     = {
+    severity = "warning"
+  }
+}
+error "serve-method-not-allowed" {
+  message    = "Given HTTP method %q for requested route %q is not allowed"
+  args       = [
+    arg("method", "string"),
+    arg("route", "string")
+  ]
+  categories = ["serve", "web-ui"]
+  labels     = {
+    severity = "warning"
+  }
+}
 error "serve-unknown-code" {
   message    = "Cannot find error definition for given code %q"
   args       = [
