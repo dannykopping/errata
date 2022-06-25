@@ -16,7 +16,7 @@ import (
 )
 
 type hclDatasource struct {
-	sync.RWMutex
+	sync.Mutex
 
 	source []byte
 	list   map[string]errorDefinition
@@ -61,8 +61,8 @@ func (h *hclDatasource) List() map[string]errorDefinition {
 }
 
 func (h *hclDatasource) isLoaded() bool {
-	h.RLock()
-	defer h.RUnlock()
+	h.Lock()
+	defer h.Unlock()
 
 	return h.list != nil
 }

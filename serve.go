@@ -27,13 +27,12 @@ var (
 type Server struct {
 	File string
 
-	logger   log.Logger
 	db       DataSource
 	idx      bleve.Index
 	bindAddr string
 }
 
-func NewServer(logger log.Logger, cfg WebUIConfig) (*Server, error) {
+func NewServer(cfg WebUIConfig) (*Server, error) {
 	source, err := NewHCLDatasource(cfg.Source)
 	if err != nil {
 		return nil, err
@@ -42,7 +41,6 @@ func NewServer(logger log.Logger, cfg WebUIConfig) (*Server, error) {
 	srv := &Server{
 		File:     cfg.Source,
 		db:       source,
-		logger:   log.With(logger, "component", "web"),
 		bindAddr: cfg.BindAddr,
 	}
 
@@ -180,7 +178,7 @@ func filterMarkdown(md goldmark.Markdown) func(in *pongo2.Value, param *pongo2.V
 }
 
 func (s *Server) errorHandler(w http.ResponseWriter, err error) {
-	LogError(s.logger, err)
+	LogError(err)
 
 	statusCode := http.StatusInternalServerError
 	if e, ok := err.(HTTPStatusCodeExtractor); ok {
@@ -198,6 +196,7 @@ type HTTPStatusCodeExtractor interface {
 
 func Serve(srv *Server) error {
 	r := mux.NewRouter()
+	logger = log.With(logger, "component", "web")
 
 	webFS, err := fs.Sub(web, "web")
 	if err != nil {
@@ -210,7 +209,7 @@ func Serve(srv *Server) error {
 	r.HandleFunc("/code/{code}", srv.Item).Methods(http.MethodGet)
 	r.HandleFunc("/search", srv.Search).Methods(http.MethodGet)
 
-	level.Info(srv.logger).Log("msg", "web UI started", "bind-addr", srv.bindAddr)
+	level.Info(logger).Log("msg", "web UI started", "bind-addr", srv.bindAddr)
 	return http.ListenAndServe(srv.bindAddr, r)
 }
 

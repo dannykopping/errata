@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/dannykopping/errata"
-	"github.com/go-kit/log"
 	"github.com/urfave/cli/v2"
 )
 
@@ -14,8 +13,6 @@ func main() {
 		codeGen errata.CodeGenConfig
 		webUI   errata.WebUIConfig
 	)
-
-	logger := log.NewLogfmtLogger(log.NewSyncWriter(os.Stdout))
 
 	app := &cli.App{
 		Name:  "EISH",
@@ -48,7 +45,7 @@ func main() {
 					},
 				},
 				Action: func(_ *cli.Context) error {
-					return errata.Generate(logger, codeGen, os.Stdout)
+					return errata.Generate(codeGen, os.Stdout)
 				},
 			},
 			{
@@ -67,7 +64,7 @@ func main() {
 					},
 				},
 				Action: func(_ *cli.Context) error {
-					srv, err := errata.NewServer(logger, webUI)
+					srv, err := errata.NewServer(webUI)
 					if err != nil {
 						return errata.NewServeWebUiErr(err, webUI.Source)
 					}
@@ -80,7 +77,7 @@ func main() {
 
 	err := app.Run(os.Args)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		fmt.Fprintf(os.Stderr, "%s failed to start:\n%s", app.Name, err)
 
 		os.Exit(1)
 	}
