@@ -4,34 +4,33 @@ import (
 	"strings"
 
 	"github.com/dannykopping/errata/sample/errata"
+	"github.com/dannykopping/errata/sample/store"
 )
 
-type Request struct {
-	EmailAddress string `form:"email"`
-	Password     string `form:"password"`
-}
-
 // Validate given request against database, returning error if present
-func Validate(req Request) error {
-	if req.EmailAddress == "" || req.Password == "" {
-		return errata.NewMissingValuesErr(nil)
+func Validate(store store.Store, email, password string) error {
+	if email == "" {
+		return errata.NewMissingValuesErr(nil, "email")
+	}
+	if password == "" {
+		return errata.NewMissingValuesErr(nil, "password")
 	}
 
-	if strings.Index(req.EmailAddress, "@") < 0 {
-		return errata.NewInvalidEmailErr(nil)
+	if strings.Index(email, "@") < 0 {
+		return errata.NewInvalidEmailErr(nil, email)
 	}
 
-	switch req.EmailAddress {
-	case "spam@email.com":
-		return errata.NewAccountBlockedSpamErr(nil)
-	case "abuse@email.com":
+	user, err := store.GetUser(email, password)
+	if err != nil {
+		return errata.NewIncorrectCredentialsErr(err)
+	}
+
+	switch true {
+	case user.Abuse:
 		return errata.NewAccountBlockedAbuseErr(nil)
-	case "valid@email.com":
-		if req.Password != "password" {
-			return errata.NewIncorrectPasswordErr(nil)
-		}
-		return nil
+	case user.Spam:
+		return errata.NewAccountBlockedSpamErr(nil)
 	}
 
-	return errata.NewIncorrectEmailErr(nil)
+	return nil
 }

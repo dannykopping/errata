@@ -2,86 +2,90 @@ package http
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 
 	"github.com/dannykopping/errata/sample/errata"
 	"github.com/dannykopping/errata/sample/login"
+	"github.com/dannykopping/errata/sample/store"
 	"github.com/gofiber/fiber/v2"
 )
 
-func NewServer() *fiber.App {
+type Request struct {
+	EmailAddress string `form:"email"`
+	Password     string `form:"password"`
+}
+
+type Response struct {
+	Message string `json:"message"`
+	Code    string `json:"code,omitempty"`
+	HelpURL string `json:"help_url,omitempty"`
+}
+
+func NewServer(store store.Store) *fiber.App {
 	app := fiber.New()
 
 	app.Use(errataMiddleware)
 	app.Post("/login", func(c *fiber.Ctx) error {
-		var req login.Request
+		var req Request
 
 		if err := c.BodyParser(&req); err != nil {
 			return errata.NewInvalidRequestErr(err)
 		}
 
-		if err := login.Validate(req); err != nil {
+		if err := login.Validate(store, req.EmailAddress, req.Password); err != nil {
 			return err
 		}
 
-		return c.SendString(fmt.Sprintf("Logged in successfully as: %s", req.EmailAddress))
+		resp := Response{
+			Message: fmt.Sprintf("Logged in successfully as: %s", req.EmailAddress),
+		}
+
+		body, err := json.Marshal(resp)
+		if err != nil {
+			return errata.NewResponseFormattingErr(err)
+		}
+
+		return c.SendString(string(body))
 	})
 
 	return app
 }
 
+type HasHTTPResponseCode interface {
+	errata.Erratum
+	GetHttpResponseCode() string
+}
+
 func errataMiddleware(c *fiber.Ctx) error {
 	err := c.Next()
 
-	var e errata.Error
-	if err != nil && errors.As(err, &e) {
-		statusCode, ex := getHTTPStatusCode(e)
-		if ex != nil || statusCode <= 0 {
-			statusCode = fiber.StatusInternalServerError
-		}
-
-		c.Response().Header.Add("X-Errata-Code", e.Code)
-
-		body, err := formatError(e)
-		if err != nil {
-			e := err.(errata.Error)
-			return fiber.NewError(statusCode, e.Message)
-		}
-
-		return fiber.NewError(statusCode, body)
+	if err == nil {
+		return nil
 	}
 
-	return err
-}
-
-func formatError(e errata.Error) (string, error) {
-	s := struct {
-		Code string `json:"code"`
-	}{
-		Code: e.Code,
+	statusCode := fiber.StatusInternalServerError
+	if e, ok := err.(HasHTTPResponseCode); ok {
+		if code, cerr := strconv.Atoi(e.GetHttpResponseCode()); cerr == nil {
+			statusCode = code
+		}
 	}
 
-	r, err := json.Marshal(&s)
+	resp := Response{
+		Message: err.Error(),
+	}
+
+	if e, ok := err.(errata.Erratum); ok {
+		c.Response().Header.Add("X-Errata-Code", e.Code())
+
+		resp.Code = e.Code()
+		resp.HelpURL = e.HelpURL()
+	}
+
+	body, err := json.Marshal(resp)
 	if err != nil {
-		return "", errata.NewResponseFormattingErr(err)
+		body = []byte("could not marshal body")
 	}
 
-	return string(r), nil
-}
-
-func getHTTPStatusCode(err errata.Error) (int, error) {
-	c, ok := err.Labels["http_response_code"]
-	if ok {
-		code, e := strconv.Atoi(c)
-		if e != nil {
-			return 0, e
-		}
-
-		return code, nil
-	}
-
-	// no exit code defined
-	return 0, nil
+	return fiber.NewError(statusCode, string(body))
 }

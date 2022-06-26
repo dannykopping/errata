@@ -1,17 +1,20 @@
 package shell
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 
 	"github.com/dannykopping/errata/sample/errata"
 	"github.com/dannykopping/errata/sample/login"
+	"github.com/dannykopping/errata/sample/store"
 	"github.com/urfave/cli/v2"
 )
 
 var (
-	request login.Request
+	email    string
+	password string
+
+	db store.Store
 )
 
 const (
@@ -23,7 +26,9 @@ const (
 	UnhandledErrorCode = 127
 )
 
-func NewApp() *cli.App {
+func NewApp(store store.Store) *cli.App {
+	db = store
+
 	return &cli.App{
 		Commands: []*cli.Command{
 			{
@@ -34,11 +39,11 @@ func NewApp() *cli.App {
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:        "email",
-						Destination: &request.EmailAddress,
+						Destination: &email,
 					},
 					&cli.StringFlag{
 						Name:        "password",
-						Destination: &request.Password,
+						Destination: &password,
 					},
 				},
 			},
@@ -56,34 +61,23 @@ func usageText() string {
 
 func loginAction(_ *cli.Context) error {
 	// attempt login
-	err := login.Validate(request)
+	err := login.Validate(db, email, password)
 
-	if err != nil {
-		var e errata.Error
-		if errors.As(err, &e) {
-			if code, ex := getShellExitCode(e); ex == nil && code >= 0 {
-				return cli.Exit(fmt.Sprintf("%s: %q", e.Code, e.Message), code)
-			}
-		}
-
-		return cli.Exit(fmt.Sprintf("unhandled error: %s", e), UnhandledErrorCode)
-
+	if err == nil {
+		return cli.Exit(fmt.Sprintf("Logged in successfully as: %s", email), SuccessCode)
 	}
 
-	return cli.Exit(fmt.Sprintf("Logged in successfully as: %s", request.EmailAddress), SuccessCode)
+	exitCode := UnhandledErrorCode
+	if e, ok := err.(HasShellExitCode); ok {
+		if code, cerr := strconv.Atoi(e.GetShellExitCode()); cerr == nil {
+			exitCode = code
+		}
+	}
+
+	return cli.Exit(err.Error(), exitCode)
 }
 
-func getShellExitCode(err errata.Error) (int, error) {
-	c, ok := err.Labels["shell_exit_code"]
-	if ok {
-		code, e := strconv.Atoi(c)
-		if e != nil {
-			return -1, e
-		}
-
-		return code, nil
-	}
-
-	// no exit code defined
-	return 0, nil
+type HasShellExitCode interface {
+	errata.Erratum
+	GetShellExitCode() string
 }

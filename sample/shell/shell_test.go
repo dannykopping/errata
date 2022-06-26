@@ -6,12 +6,17 @@ import (
 	"testing"
 
 	"github.com/dannykopping/errata/sample/errata"
+	"github.com/dannykopping/errata/sample/store"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/urfave/cli/v2"
 )
 
 func TestErrorResponses(t *testing.T) {
-	app := NewApp()
+	store, err := store.NewUsersStore("../users.sqlite3")
+	require.NoError(t, err)
+
+	app := NewApp(store)
 
 	requests := []struct {
 		email              string
@@ -21,15 +26,15 @@ func TestErrorResponses(t *testing.T) {
 		expectedStdout     string
 	}{
 		{"valid@email.com", "password", SuccessCode, "", "Logged in successfully as: valid@email.com"},
-		{"valid@email.com", "wrong", UnsuccessfulCode, errata.ErrIncorrectPassword, stdoutResponse(errata.ErrIncorrectPassword)},
-		{"valid@email.com", "", InvalidCode, errata.ErrMissingValues, stdoutResponse(errata.ErrMissingValues)},
-		{"", "", InvalidCode, errata.ErrMissingValues, stdoutResponse(errata.ErrMissingValues)},
-		{"", "pass", InvalidCode, errata.ErrMissingValues, stdoutResponse(errata.ErrMissingValues)},
-		{"spam@email.com", "1234", BlockedCode, errata.ErrAccountBlockedSpam, stdoutResponse(errata.ErrAccountBlockedSpam)},
-		{"abuse@email.com", "1234", BlockedCode, errata.ErrAccountBlockedAbuse, stdoutResponse(errata.ErrAccountBlockedAbuse)},
-		{"abuse@email.com", "1234", BlockedCode, errata.ErrAccountBlockedAbuse, stdoutResponse(errata.ErrAccountBlockedAbuse)},
-		{"invalid.email", "1234", InvalidCode, errata.ErrInvalidEmail, stdoutResponse(errata.ErrInvalidEmail)},
-		{"missing@email.com", "1234", UnsuccessfulCode, errata.ErrIncorrectEmail, stdoutResponse(errata.ErrIncorrectEmail)},
+		{"valid@email.com", "wrong", UnsuccessfulCode, errata.IncorrectCredentialsErrCode, errata.IncorrectCredentialsErrCode},
+		{"valid@email.com", "", InvalidCode, errata.MissingValuesErrCode, errata.MissingValuesErrCode},
+		{"", "", InvalidCode, errata.MissingValuesErrCode, errata.MissingValuesErrCode},
+		{"", "pass", InvalidCode, errata.MissingValuesErrCode, errata.MissingValuesErrCode},
+		{"spam@email.com", "password", BlockedCode, errata.AccountBlockedSpamErrCode, errata.AccountBlockedSpamErrCode},
+		{"abuse@email.com", "password", BlockedCode, errata.AccountBlockedAbuseErrCode, errata.AccountBlockedAbuseErrCode},
+		{"abuse@email.com", "password", BlockedCode, errata.AccountBlockedAbuseErrCode, errata.AccountBlockedAbuseErrCode},
+		{"invalid.email", "password", InvalidCode, errata.InvalidEmailErrCode, errata.InvalidEmailErrCode},
+		{"missing@email.com", "password", UnsuccessfulCode, errata.IncorrectCredentialsErrCode, errata.IncorrectCredentialsErrCode},
 	}
 
 	for _, request := range requests {
@@ -43,7 +48,7 @@ func TestErrorResponses(t *testing.T) {
 			assert.Equal(t, request.expectedExitCode, exitCode)
 
 			assert.Error(t, err)
-			assert.Equal(t, request.expectedStdout, err.Error())
+			assert.Contains(t, err.Error(), request.expectedStdout)
 		}
 
 		err := app.Run([]string{
@@ -54,9 +59,4 @@ func TestErrorResponses(t *testing.T) {
 		})
 		assert.Error(t, err)
 	}
-}
-
-func stdoutResponse(code string) string {
-	err := errata.NewFromCode(code, nil)
-	return fmt.Sprintf("%s: %q", err.Code, err.Message)
 }

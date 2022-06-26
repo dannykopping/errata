@@ -9,13 +9,17 @@ import (
 	"testing"
 
 	"github.com/dannykopping/errata/sample/errata"
+	"github.com/dannykopping/errata/sample/store"
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestErrorResponses(t *testing.T) {
-	server := NewServer()
+	store, err := store.NewUsersStore("../users.sqlite3")
+	require.NoError(t, err)
+
+	server := NewServer(store)
 
 	requests := []struct {
 		email              string
@@ -25,15 +29,15 @@ func TestErrorResponses(t *testing.T) {
 		expectedBody       string
 	}{
 		{"valid@email.com", "password", fiber.StatusOK, "", "Logged in successfully as: valid@email.com"},
-		{"valid@email.com", "wrong", fiber.StatusForbidden, errata.ErrIncorrectPassword, jsonBodyResponse(errata.ErrIncorrectPassword)},
-		{"valid@email.com", "", fiber.StatusBadRequest, errata.ErrMissingValues, jsonBodyResponse(errata.ErrMissingValues)},
-		{"", "", fiber.StatusBadRequest, errata.ErrMissingValues, jsonBodyResponse(errata.ErrMissingValues)},
-		{"", "pass", fiber.StatusBadRequest, errata.ErrMissingValues, jsonBodyResponse(errata.ErrMissingValues)},
-		{"spam@email.com", "1234", fiber.StatusForbidden, errata.ErrAccountBlockedSpam, jsonBodyResponse(errata.ErrAccountBlockedSpam)},
-		{"abuse@email.com", "1234", fiber.StatusForbidden, errata.ErrAccountBlockedAbuse, jsonBodyResponse(errata.ErrAccountBlockedAbuse)},
-		{"abuse@email.com", "1234", fiber.StatusForbidden, errata.ErrAccountBlockedAbuse, jsonBodyResponse(errata.ErrAccountBlockedAbuse)},
-		{"invalid.email", "1234", fiber.StatusBadRequest, errata.ErrInvalidEmail, jsonBodyResponse(errata.ErrInvalidEmail)},
-		{"missing@email.com", "1234", fiber.StatusForbidden, errata.ErrIncorrectEmail, jsonBodyResponse(errata.ErrIncorrectEmail)},
+		{"valid@email.com", "wrong", fiber.StatusForbidden, errata.IncorrectCredentialsErrCode, jsonBodyResponse(errata.IncorrectCredentialsErrCode)},
+		{"valid@email.com", "", fiber.StatusBadRequest, errata.MissingValuesErrCode, jsonBodyResponse(errata.MissingValuesErrCode)},
+		{"", "", fiber.StatusBadRequest, errata.MissingValuesErrCode, jsonBodyResponse(errata.MissingValuesErrCode)},
+		{"", "pass", fiber.StatusBadRequest, errata.MissingValuesErrCode, jsonBodyResponse(errata.MissingValuesErrCode)},
+		{"spam@email.com", "password", fiber.StatusForbidden, errata.AccountBlockedSpamErrCode, jsonBodyResponse(errata.AccountBlockedSpamErrCode)},
+		{"abuse@email.com", "password", fiber.StatusForbidden, errata.AccountBlockedAbuseErrCode, jsonBodyResponse(errata.AccountBlockedAbuseErrCode)},
+		{"abuse@email.com", "password", fiber.StatusForbidden, errata.AccountBlockedAbuseErrCode, jsonBodyResponse(errata.AccountBlockedAbuseErrCode)},
+		{"invalid.email", "password", fiber.StatusBadRequest, errata.InvalidEmailErrCode, jsonBodyResponse(errata.InvalidEmailErrCode)},
+		{"missing@email.com", "password", fiber.StatusForbidden, errata.IncorrectCredentialsErrCode, jsonBodyResponse(errata.IncorrectCredentialsErrCode)},
 	}
 
 	for _, request := range requests {
@@ -51,7 +55,7 @@ func TestErrorResponses(t *testing.T) {
 		assert.Equal(t, request.expectedErrataCode, resp.Header.Get("X-Errata-Code"))
 		body, err := io.ReadAll(resp.Body)
 		assert.NoError(t, err)
-		assert.Equal(t, request.expectedBody, string(body))
+		assert.Contains(t, string(body), request.expectedErrataCode)
 	}
 }
 
