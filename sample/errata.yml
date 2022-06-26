@@ -1,0 +1,73 @@
+---
+version: '0.1'
+
+errors:
+  # invalid request errors
+  missing_values:
+    message: One or more values are missing
+    cause: Form submission was missing required fields
+    categories: [ login ]
+
+    args must always be strings
+    context must always be a generic type
+
+    args:
+      missing:
+        golang: []interface{}
+        php:
+    labels:
+      http_response_code: 400
+      shell_exit_code: 1
+  invalid_request:
+    message: One or more values are missing
+    cause: Form submission was missing required fields
+    categories: [ login ]
+    labels:
+      http_response_code: 400
+      shell_exit_code: 1
+  invalid_email:
+    message: Please provide a valid email address
+    cause: Given email address is invalid
+    solution: >
+      Ensure the email address has a _username_, an `@` symbol, and a _domain_ name.
+
+      **Example: `john@doe.com`**
+    categories: [ login ]
+    labels:
+      http_response_code: 400
+      shell_exit_code: 1
+
+  # unsuccessful errors
+  incorrect_email:
+    message: Given email address is incorrect
+    categories: [ login ]
+    labels:
+      http_response_code: 403
+      shell_exit_code: 2
+  incorrect_password:
+    message: Given password is incorrect
+    categories: [ login ]
+    labels:
+      http_response_code: 403
+      shell_exit_code: 2
+
+  # blocked errors
+  account_blocked_spam:
+    message: Account is blocked because of spam
+    categories: [ login ]
+    labels:
+      http_response_code: 403
+      shell_exit_code: 3
+  account_blocked_abuse:
+    message: Account is blocked because of abuse
+    categories: [ login ]
+    labels:
+      http_response_code: 403
+      shell_exit_code: 3
+
+  # response errors
+  response_formatting:
+    message: Failed to format response body
+    categories: [ internal ]
+    labels:
+      http_response_code: 500
