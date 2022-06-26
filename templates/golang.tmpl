@@ -122,10 +122,10 @@ type {{ code | constantize }}Err struct {
 func New{{ code | constantize }}Err(wrapped error, {{ args(error.Args) }} {{ contexts(error.Definition.context) }}) {{ code | constantize }}Err {
   err := erratum{
     code: {{ code | constantize }}ErrCode,
-    message: `{{ error.Message -}}`,
+    message: `{{ error.Message | escape_backtick -}}`,
     categories: []string{ {{- quote_list(error.Categories) -}} },
     labels: map[string]string{ {{ quote_map(error.Labels) }} },
-    guide: `{{ error.Guide -}}`,
+    guide: `{{ error.Guide | escape_backtick -}}`,
 
     args: []interface{}{ {{ args_list(error.Args) }} },
     wrapped: wrapped,

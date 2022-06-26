@@ -2,6 +2,7 @@ package errata
 
 import (
 	"io"
+	"strings"
 
 	"github.com/flosch/pongo2/v5"
 	"github.com/iancoleman/strcase"
@@ -14,6 +15,12 @@ type pongo2Renderer struct {
 func preparePongo2() {
 	pongo2.RegisterFilter("constantize", func(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, err *pongo2.Error) {
 		return pongo2.AsValue(strcase.ToCamel(in.String())), nil
+	})
+
+	// backticks can't be escaped in golang multi-line strings
+	pongo2.RegisterFilter("escape_backtick", func(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, err *pongo2.Error) {
+		splits := strings.Split(in.String(), "`")
+		return pongo2.AsValue(strings.Join(splits, "` + \"`\" + `")), nil
 	})
 	pongo2.SetAutoescape(false)
 }
