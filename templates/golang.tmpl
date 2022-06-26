@@ -20,7 +20,6 @@ import (
 type erratum struct {
 	code       string
 	message    string
-	cause      string
 	categories []string
 	args       []interface{}
 	labels     map[string]string
@@ -43,7 +42,6 @@ type Erratum interface {
 
 	Code() string
 	Message() string
-	Cause() string
 	Categories() []string
 	Args() []interface{}
 	Guide() string
@@ -82,10 +80,6 @@ func (e erratum) Code() string {
 
 func (e erratum) Message() string {
 	return e.message
-}
-
-func (e erratum) Cause() string {
-	return e.cause
 }
 
 func (e erratum) Categories() []string {
@@ -129,7 +123,6 @@ func New{{ code | constantize }}Err(wrapped error, {{ args(error.Args) }} {{ con
   err := erratum{
     code: {{ code | constantize }}ErrCode,
     message: `{{ error.Message -}}`,
-    cause: `{{ error.Cause }}`,
     categories: []string{ {{- quote_list(error.Categories) -}} },
     labels: map[string]string{ {{ quote_map(error.Labels) }} },
     guide: `{{ error.Guide -}}`,
