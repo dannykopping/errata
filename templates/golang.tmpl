@@ -21,7 +21,7 @@ type erratum struct {
 	code       string
 	message    string
 	categories []string
-	args       []interface{}
+	args       map[string]interface{}
 	labels     map[string]string
 	guide      string
 
@@ -43,7 +43,7 @@ type Erratum interface {
 	Code() string
 	Message() string
 	Categories() []string
-	Args() []interface{}
+	Args() map[string]interface{}
 	Guide() string
 	Labels() map[string]string
 
@@ -51,58 +51,59 @@ type Erratum interface {
 	HelpURL() string
 }
 
-func (e erratum) Unwrap() error {
+func (e *erratum) Unwrap() error {
 	return e.wrapped
 }
 
-func (e erratum) UUID() string {
+func (e *erratum) UUID() string {
 	if e.uuid == "" {
 		e.uuid = generateReference(e.code)
 	}
 	return e.uuid
 }
 
-func (e erratum) Error() string {
-	message := fmt.Sprintf("[errata-%s] [%s:%v] %s. For more details, see %s", e.code, e.file, e.line, e.message, e.HelpURL())
-	if unwrapped := e.Unwrap(); unwrapped != nil {
-		message = fmt.Sprintf("%s\n↳ %s", message, unwrapped.Error())
-	}
-	return fmt.Sprintf(message, e.Args()...)
+func (e *erratum) Error() string {
+	// message := fmt.Sprintf("[errata-%s] [%s:%v] %s. For more details, see %s", e.code, e.file, e.line, e.message, e.HelpURL())
+	// if unwrapped := e.Unwrap(); unwrapped != nil {
+	// 	message = fmt.Sprintf("%s\n↳ %s", message, unwrapped.Error())
+	// }
+	// return fmt.Sprintf(message, e.Args()...)
+	return e.Message()
 }
 
-func (e erratum) HelpURL() string {
+func (e *erratum) HelpURL() string {
   return fmt.Sprintf("{{ Options.BaseURL }}%s", e.code)
 }
 
-func (e erratum) Code() string {
+func (e *erratum) Code() string {
 	return e.code
 }
 
-func (e erratum) Message() string {
+func (e *erratum) Message() string {
 	return e.message
 }
 
-func (e erratum) Categories() []string {
+func (e *erratum) Categories() []string {
 	return e.categories
 }
 
-func (e erratum) Args() []interface{} {
+func (e *erratum) Args() map[string]interface{} {
 	return e.args
 }
 
-func (e erratum) Labels() map[string]string {
+func (e *erratum) Labels() map[string]string {
 	return e.labels
 }
 
-func (e erratum) Guide() string {
+func (e *erratum) Guide() string {
 	return e.guide
 }
 
-func (e erratum) File() string {
+func (e *erratum) File() string {
 	return e.file
 }
 
-func (e erratum) Line() int {
+func (e *erratum) Line() int {
 	return e.line
 }
 
@@ -119,7 +120,7 @@ type {{ code | constantize }}Err struct {
 {%- endfor %}
 
 {% for code, error in Errors sorted %}
-func New{{ code | constantize }}Err(wrapped error, {{ args(error.Args) }} {{ contexts(error.Definition.context) }}) {{ code | constantize }}Err {
+func New{{ code | constantize }}Err(wrapped error, {{ args(error.Args) }} {{ contexts(error.Definition.context) }}) *{{ code | constantize }}Err {
   err := erratum{
     code: {{ code | constantize }}ErrCode,
     message: `{{ error.Message | escape_backtick -}}`,
@@ -127,17 +128,28 @@ func New{{ code | constantize }}Err(wrapped error, {{ args(error.Args) }} {{ con
     labels: map[string]string{ {{ quote_map(error.Labels) }} },
     guide: `{{ error.Guide | escape_backtick -}}`,
 
-    args: []interface{}{ {{ args_list(error.Args) }} },
+    args: map[string]interface{}{
+      {% for name in error.Args %}
+        "{{ name }}": {{ name }},
+      {% endfor %}
+    },
     wrapped: wrapped,
   }
 
   addCaller(&err)
-  return {{ code | constantize }}Err{err}
+  return &{{ code | constantize }}Err{err}
 }
+
+{% for name in error.Args %}
+// Get{{ name | constantize }} returns the {{ name | stringformat:"%q" }} argument for a {{ code | constantize }}Err instance.
+func (e *{{ code | constantize }}Err) Get{{ name | constantize }}() interface{} {
+  return e.args["{{ name }}"]
+}
+{% endfor -%}
 
 {% for label, value in error.Labels %}
 // Get{{ label | constantize }} returns the {{ label|stringformat:"%q" }} label for a {{ code | constantize }}Err instance.
-func (e {{ code | constantize }}Err) Get{{ label | constantize }}() string {
+func (e *{{ code | constantize }}Err) Get{{ label | constantize }}() string {
   return {{ value | stringformat:"%q" }}
 }
 {% endfor -%}

@@ -68,6 +68,19 @@ error "invalid-datasource" {
   }
 }
 
+error "argument-label-name-clash" {
+  message    = "An error definition contains a label with the same name as an argument"
+  categories = ["datasource", "validation"]
+  guide      = "Error definitions must have labels with keys that are unique across the list of arguments"
+  args       = [
+    arg("key", "string")
+  ]
+  labels     = {
+    severity = "fatal"
+    key = "value"
+  }
+}
+
 /*
   Code-generation errata
 */

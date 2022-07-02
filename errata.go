@@ -15,9 +15,8 @@ import (
 type erratum struct {
 	code       string
 	message    string
-	cause      string
 	categories []string
-	args       []interface{}
+	args       map[string]interface{}
 	labels     map[string]string
 	guide      string
 
@@ -34,13 +33,13 @@ type erratum struct {
 type Erratum interface {
 	// behave like a regular error
 	error
+
 	Unwrap() error
 
 	Code() string
 	Message() string
-	Cause() string
 	Categories() []string
-	Args() []interface{}
+	Args() map[string]interface{}
 	Guide() string
 	Labels() map[string]string
 
@@ -48,66 +47,73 @@ type Erratum interface {
 	HelpURL() string
 }
 
-func (e erratum) Unwrap() error {
+func (e *erratum) Unwrap() error {
 	return e.wrapped
 }
 
-func (e erratum) UUID() string {
+func (e *erratum) UUID() string {
 	if e.uuid == "" {
 		e.uuid = generateReference(e.code)
 	}
 	return e.uuid
 }
 
-func (e erratum) Error() string {
-	message := fmt.Sprintf("[errata-%s] [%s:%v] %s. For more details, see %s", e.code, e.file, e.line, e.message, e.HelpURL())
-	if unwrapped := e.Unwrap(); unwrapped != nil {
-		message = fmt.Sprintf("%s\n↳ %s", message, unwrapped.Error())
+func (e *erratum) Format(f fmt.State, verb rune) {
+	if verb == 'v' && f.Flag('+') {
+		f.Write([]byte(fmt.Sprintf("%s. For more details, see %s", e.Error(), e.HelpURL())))
+		if unwrapped := e.Unwrap(); unwrapped != nil {
+			if e, ok := unwrapped.(fmt.Formatter); ok {
+				f.Write([]byte("\n↳ "))
+				e.Format(f, verb)
+			}
+		}
+	} else {
+		f.Write([]byte(e.Error()))
 	}
-	return fmt.Sprintf(message, e.Args()...)
 }
 
-func (e erratum) HelpURL() string {
+func (e *erratum) Error() string {
+	return fmt.Sprintf("[errata-%s] [%s:%v] %s", e.code, e.file, e.line, e.message)
+}
+
+func (e *erratum) HelpURL() string {
 	return fmt.Sprintf("https://dannykopping.github.io/errata/errata/%s", e.code)
 }
 
-func (e erratum) Code() string {
+func (e *erratum) Code() string {
 	return e.code
 }
 
-func (e erratum) Message() string {
+func (e *erratum) Message() string {
 	return e.message
 }
 
-func (e erratum) Cause() string {
-	return e.cause
-}
-
-func (e erratum) Categories() []string {
+func (e *erratum) Categories() []string {
 	return e.categories
 }
 
-func (e erratum) Args() []interface{} {
+func (e *erratum) Args() map[string]interface{} {
 	return e.args
 }
 
-func (e erratum) Labels() map[string]string {
+func (e *erratum) Labels() map[string]string {
 	return e.labels
 }
 
-func (e erratum) Guide() string {
+func (e *erratum) Guide() string {
 	return e.guide
 }
 
-func (e erratum) File() string {
+func (e *erratum) File() string {
 	return e.file
 }
 
-func (e erratum) Line() int {
+func (e *erratum) Line() int {
 	return e.line
 }
 
 const (
+	ArgumentLabelNameClashErrCode string = "argument-label-name-clash"
 	CodeGenErrCode                string = "code-gen"
 	FileNotFoundErrCode           string = "file-not-found"
 	FileNotReadableErrCode        string = "file-not-readable"
@@ -124,6 +130,9 @@ const (
 	TemplateExecutionErrCode      string = "template-execution"
 )
 
+type ArgumentLabelNameClashErr struct {
+	erratum
+}
 type CodeGenErr struct {
 	erratum
 }
@@ -167,251 +176,326 @@ type TemplateExecutionErr struct {
 	erratum
 }
 
-func NewCodeGenErr(wrapped error) CodeGenErr {
+func NewArgumentLabelNameClashErr(wrapped error, key string) *ArgumentLabelNameClashErr {
+	err := erratum{
+		code:       ArgumentLabelNameClashErrCode,
+		message:    `An error definition contains a label with the same name as an argument`,
+		categories: []string{"datasource", "validation"},
+		labels: map[string]string{
+			"severity": "fatal",
+		},
+		guide: `Error definitions must have labels with keys that are unique across the list of arguments`,
+
+		args: map[string]interface{}{
+
+			"key": key,
+		},
+		wrapped: wrapped,
+	}
+
+	addCaller(&err)
+	return &ArgumentLabelNameClashErr{err}
+}
+
+// GetKey returns the "key" argument for a ArgumentLabelNameClashErr instance.
+func (e *ArgumentLabelNameClashErr) GetKey() interface{} {
+	return e.args["key"]
+}
+
+// GetSeverity returns the "severity" label for a ArgumentLabelNameClashErr instance.
+func (e *ArgumentLabelNameClashErr) GetSeverity() string {
+	return "fatal"
+}
+
+func NewCodeGenErr(wrapped error) *CodeGenErr {
 	err := erratum{
 		code:       CodeGenErrCode,
 		message:    `Code generation failed`,
-		cause:      ``,
 		categories: []string{"codegen"},
 		labels: map[string]string{
 			"severity": "fatal",
 		},
 		guide: `The provided template may contain errors`,
 
-		args:    []interface{}{},
+		args:    map[string]interface{}{},
 		wrapped: wrapped,
 	}
 
 	addCaller(&err)
-	return CodeGenErr{err}
+	return &CodeGenErr{err}
 }
 
 // GetSeverity returns the "severity" label for a CodeGenErr instance.
-func (e CodeGenErr) GetSeverity() string {
+func (e *CodeGenErr) GetSeverity() string {
 	return "fatal"
 }
 
-func NewFileNotFoundErr(wrapped error, path string) FileNotFoundErr {
+func NewFileNotFoundErr(wrapped error, path string) *FileNotFoundErr {
 	err := erratum{
 		code:       FileNotFoundErrCode,
 		message:    `File path %q is incorrect or inaccessible`,
-		cause:      ``,
 		categories: []string{"file"},
 		labels: map[string]string{
 			"severity": "fatal",
 		},
 		guide: `Ensure the given file exists and can be accessed by errata`,
 
-		args:    []interface{}{path},
+		args: map[string]interface{}{
+
+			"path": path,
+		},
 		wrapped: wrapped,
 	}
 
 	addCaller(&err)
-	return FileNotFoundErr{err}
+	return &FileNotFoundErr{err}
+}
+
+// GetPath returns the "path" argument for a FileNotFoundErr instance.
+func (e *FileNotFoundErr) GetPath() interface{} {
+	return e.args["path"]
 }
 
 // GetSeverity returns the "severity" label for a FileNotFoundErr instance.
-func (e FileNotFoundErr) GetSeverity() string {
+func (e *FileNotFoundErr) GetSeverity() string {
 	return "fatal"
 }
 
-func NewFileNotReadableErr(wrapped error, path string) FileNotReadableErr {
+func NewFileNotReadableErr(wrapped error, path string) *FileNotReadableErr {
 	err := erratum{
 		code:       FileNotReadableErrCode,
 		message:    `File %q is unreadable`,
-		cause:      ``,
 		categories: []string{"file"},
 		labels: map[string]string{
 			"severity": "fatal",
 		},
 		guide: `Ensure the given file has the correct permissions`,
 
-		args:    []interface{}{path},
+		args: map[string]interface{}{
+
+			"path": path,
+		},
 		wrapped: wrapped,
 	}
 
 	addCaller(&err)
-	return FileNotReadableErr{err}
+	return &FileNotReadableErr{err}
+}
+
+// GetPath returns the "path" argument for a FileNotReadableErr instance.
+func (e *FileNotReadableErr) GetPath() interface{} {
+	return e.args["path"]
 }
 
 // GetSeverity returns the "severity" label for a FileNotReadableErr instance.
-func (e FileNotReadableErr) GetSeverity() string {
+func (e *FileNotReadableErr) GetSeverity() string {
 	return "fatal"
 }
 
-func NewInvalidDatasourceErr(wrapped error, path string) InvalidDatasourceErr {
+func NewInvalidDatasourceErr(wrapped error, path string) *InvalidDatasourceErr {
 	err := erratum{
 		code:       InvalidDatasourceErrCode,
 		message:    `Datasource file %q is invalid`,
-		cause:      ``,
 		categories: []string{"datasource"},
 		labels: map[string]string{
 			"severity": "fatal",
 		},
 		guide: `Check the given datasource file for errors`,
 
-		args:    []interface{}{path},
+		args: map[string]interface{}{
+
+			"path": path,
+		},
 		wrapped: wrapped,
 	}
 
 	addCaller(&err)
-	return InvalidDatasourceErr{err}
+	return &InvalidDatasourceErr{err}
+}
+
+// GetPath returns the "path" argument for a InvalidDatasourceErr instance.
+func (e *InvalidDatasourceErr) GetPath() interface{} {
+	return e.args["path"]
 }
 
 // GetSeverity returns the "severity" label for a InvalidDatasourceErr instance.
-func (e InvalidDatasourceErr) GetSeverity() string {
+func (e *InvalidDatasourceErr) GetSeverity() string {
 	return "fatal"
 }
 
-func NewInvalidDefinitionsErr(wrapped error, path string) InvalidDefinitionsErr {
+func NewInvalidDefinitionsErr(wrapped error, path string) *InvalidDefinitionsErr {
 	err := erratum{
 		code:       InvalidDefinitionsErrCode,
 		message:    `One or more definitions declared in %q are invalid`,
-		cause:      ``,
 		categories: []string{"definitions", "validation"},
 		labels: map[string]string{
 			"severity": "fatal",
 		},
 		guide: ``,
 
-		args:    []interface{}{path},
+		args: map[string]interface{}{
+
+			"path": path,
+		},
 		wrapped: wrapped,
 	}
 
 	addCaller(&err)
-	return InvalidDefinitionsErr{err}
+	return &InvalidDefinitionsErr{err}
+}
+
+// GetPath returns the "path" argument for a InvalidDefinitionsErr instance.
+func (e *InvalidDefinitionsErr) GetPath() interface{} {
+	return e.args["path"]
 }
 
 // GetSeverity returns the "severity" label for a InvalidDefinitionsErr instance.
-func (e InvalidDefinitionsErr) GetSeverity() string {
+func (e *InvalidDefinitionsErr) GetSeverity() string {
 	return "fatal"
 }
 
-func NewInvalidSyntaxErr(wrapped error, path string) InvalidSyntaxErr {
+func NewInvalidSyntaxErr(wrapped error, path string) *InvalidSyntaxErr {
 	err := erratum{
 		code:       InvalidSyntaxErrCode,
 		message:    `File %q has syntax errors`,
-		cause:      ``,
 		categories: []string{"parsing"},
 		labels: map[string]string{
 			"severity": "fatal",
 		},
 		guide: ``,
 
-		args:    []interface{}{path},
+		args: map[string]interface{}{
+
+			"path": path,
+		},
 		wrapped: wrapped,
 	}
 
 	addCaller(&err)
-	return InvalidSyntaxErr{err}
+	return &InvalidSyntaxErr{err}
+}
+
+// GetPath returns the "path" argument for a InvalidSyntaxErr instance.
+func (e *InvalidSyntaxErr) GetPath() interface{} {
+	return e.args["path"]
 }
 
 // GetSeverity returns the "severity" label for a InvalidSyntaxErr instance.
-func (e InvalidSyntaxErr) GetSeverity() string {
+func (e *InvalidSyntaxErr) GetSeverity() string {
 	return "fatal"
 }
 
-func NewMarkdownRenderingErr(wrapped error) MarkdownRenderingErr {
+func NewMarkdownRenderingErr(wrapped error) *MarkdownRenderingErr {
 	err := erratum{
 		code:       MarkdownRenderingErrCode,
 		message:    `Markdown rendering failed`,
-		cause:      ``,
 		categories: []string{"web-ui"},
 		labels: map[string]string{
 			"severity": "warning",
 		},
 		guide: ``,
 
-		args:    []interface{}{},
+		args:    map[string]interface{}{},
 		wrapped: wrapped,
 	}
 
 	addCaller(&err)
-	return MarkdownRenderingErr{err}
+	return &MarkdownRenderingErr{err}
 }
 
 // GetSeverity returns the "severity" label for a MarkdownRenderingErr instance.
-func (e MarkdownRenderingErr) GetSeverity() string {
+func (e *MarkdownRenderingErr) GetSeverity() string {
 	return "warning"
 }
 
-func NewServeMethodNotAllowedErr(wrapped error, method string, route string) ServeMethodNotAllowedErr {
+func NewServeMethodNotAllowedErr(wrapped error, method string, route string) *ServeMethodNotAllowedErr {
 	err := erratum{
 		code:       ServeMethodNotAllowedErrCode,
 		message:    `Given HTTP method %q for requested route %q is not allowed`,
-		cause:      ``,
 		categories: []string{"serve", "web-ui"},
 		labels: map[string]string{
 			"severity": "warning",
 		},
 		guide: ``,
 
-		args:    []interface{}{method, route},
+		args: map[string]interface{}{
+
+			"method": method,
+
+			"route": route,
+		},
 		wrapped: wrapped,
 	}
 
 	addCaller(&err)
-	return ServeMethodNotAllowedErr{err}
+	return &ServeMethodNotAllowedErr{err}
+}
+
+// GetMethod returns the "method" argument for a ServeMethodNotAllowedErr instance.
+func (e *ServeMethodNotAllowedErr) GetMethod() interface{} {
+	return e.args["method"]
+}
+
+// GetRoute returns the "route" argument for a ServeMethodNotAllowedErr instance.
+func (e *ServeMethodNotAllowedErr) GetRoute() interface{} {
+	return e.args["route"]
 }
 
 // GetSeverity returns the "severity" label for a ServeMethodNotAllowedErr instance.
-func (e ServeMethodNotAllowedErr) GetSeverity() string {
+func (e *ServeMethodNotAllowedErr) GetSeverity() string {
 	return "warning"
 }
 
-func NewServeSearchIndexErr(wrapped error) ServeSearchIndexErr {
+func NewServeSearchIndexErr(wrapped error) *ServeSearchIndexErr {
 	err := erratum{
 		code:       ServeSearchIndexErrCode,
 		message:    `Failed to build search index`,
-		cause:      ``,
 		categories: []string{"serve", "web-ui", "search"},
 		labels: map[string]string{
 			"severity": "fatal",
 		},
 		guide: ``,
 
-		args:    []interface{}{},
+		args:    map[string]interface{}{},
 		wrapped: wrapped,
 	}
 
 	addCaller(&err)
-	return ServeSearchIndexErr{err}
+	return &ServeSearchIndexErr{err}
 }
 
 // GetSeverity returns the "severity" label for a ServeSearchIndexErr instance.
-func (e ServeSearchIndexErr) GetSeverity() string {
+func (e *ServeSearchIndexErr) GetSeverity() string {
 	return "fatal"
 }
 
-func NewServeSearchMissingTermErr(wrapped error) ServeSearchMissingTermErr {
+func NewServeSearchMissingTermErr(wrapped error) *ServeSearchMissingTermErr {
 	err := erratum{
 		code:       ServeSearchMissingTermErrCode,
 		message:    `Search request is missing a "term" query string parameter`,
-		cause:      ``,
 		categories: []string{"serve", "web-ui", "search"},
 		labels: map[string]string{
 			"severity": "warning",
 		},
 		guide: ``,
 
-		args:    []interface{}{},
+		args:    map[string]interface{}{},
 		wrapped: wrapped,
 	}
 
 	addCaller(&err)
-	return ServeSearchMissingTermErr{err}
+	return &ServeSearchMissingTermErr{err}
 }
 
 // GetSeverity returns the "severity" label for a ServeSearchMissingTermErr instance.
-func (e ServeSearchMissingTermErr) GetSeverity() string {
+func (e *ServeSearchMissingTermErr) GetSeverity() string {
 	return "warning"
 }
 
-func NewServeUnknownCodeErr(wrapped error, code string) ServeUnknownCodeErr {
+func NewServeUnknownCodeErr(wrapped error, code string) *ServeUnknownCodeErr {
 	err := erratum{
 		code:       ServeUnknownCodeErrCode,
 		message:    `Cannot find error definition for given code %q`,
-		cause:      ``,
 		categories: []string{"serve", "web-ui"},
 		labels: map[string]string{
 			"http_status_code": "404",
@@ -419,93 +503,114 @@ func NewServeUnknownCodeErr(wrapped error, code string) ServeUnknownCodeErr {
 		},
 		guide: ``,
 
-		args:    []interface{}{code},
+		args: map[string]interface{}{
+
+			"code": code,
+		},
 		wrapped: wrapped,
 	}
 
 	addCaller(&err)
-	return ServeUnknownCodeErr{err}
+	return &ServeUnknownCodeErr{err}
+}
+
+// GetCode returns the "code" argument for a ServeUnknownCodeErr instance.
+func (e *ServeUnknownCodeErr) GetCode() interface{} {
+	return e.args["code"]
 }
 
 // GetHttpStatusCode returns the "http_status_code" label for a ServeUnknownCodeErr instance.
-func (e ServeUnknownCodeErr) GetHttpStatusCode() string {
+func (e *ServeUnknownCodeErr) GetHttpStatusCode() string {
 	return "404"
 }
 
 // GetSeverity returns the "severity" label for a ServeUnknownCodeErr instance.
-func (e ServeUnknownCodeErr) GetSeverity() string {
+func (e *ServeUnknownCodeErr) GetSeverity() string {
 	return "warning"
 }
 
-func NewServeUnknownRouteErr(wrapped error, route string) ServeUnknownRouteErr {
+func NewServeUnknownRouteErr(wrapped error, route string) *ServeUnknownRouteErr {
 	err := erratum{
 		code:       ServeUnknownRouteErrCode,
 		message:    `Requested route %q not defined`,
-		cause:      ``,
 		categories: []string{"serve", "web-ui"},
 		labels: map[string]string{
 			"severity": "warning",
 		},
 		guide: ``,
 
-		args:    []interface{}{route},
+		args: map[string]interface{}{
+
+			"route": route,
+		},
 		wrapped: wrapped,
 	}
 
 	addCaller(&err)
-	return ServeUnknownRouteErr{err}
+	return &ServeUnknownRouteErr{err}
+}
+
+// GetRoute returns the "route" argument for a ServeUnknownRouteErr instance.
+func (e *ServeUnknownRouteErr) GetRoute() interface{} {
+	return e.args["route"]
 }
 
 // GetSeverity returns the "severity" label for a ServeUnknownRouteErr instance.
-func (e ServeUnknownRouteErr) GetSeverity() string {
+func (e *ServeUnknownRouteErr) GetSeverity() string {
 	return "warning"
 }
 
-func NewServeWebUiErr(wrapped error, path string) ServeWebUiErr {
+func NewServeWebUiErr(wrapped error, path string) *ServeWebUiErr {
 	err := erratum{
 		code:       ServeWebUiErrCode,
 		message:    `Cannot serve web UI for datasource %q`,
-		cause:      ``,
 		categories: []string{"serve", "web-ui"},
 		labels: map[string]string{
 			"severity": "fatal",
 		},
 		guide: ``,
 
-		args:    []interface{}{path},
+		args: map[string]interface{}{
+
+			"path": path,
+		},
 		wrapped: wrapped,
 	}
 
 	addCaller(&err)
-	return ServeWebUiErr{err}
+	return &ServeWebUiErr{err}
+}
+
+// GetPath returns the "path" argument for a ServeWebUiErr instance.
+func (e *ServeWebUiErr) GetPath() interface{} {
+	return e.args["path"]
 }
 
 // GetSeverity returns the "severity" label for a ServeWebUiErr instance.
-func (e ServeWebUiErr) GetSeverity() string {
+func (e *ServeWebUiErr) GetSeverity() string {
 	return "fatal"
 }
 
-func NewTemplateExecutionErr(wrapped error) TemplateExecutionErr {
+func NewTemplateExecutionErr(wrapped error) *TemplateExecutionErr {
 	err := erratum{
 		code:       TemplateExecutionErrCode,
 		message:    `Error in template execution`,
-		cause:      `Possible use of missing or renamed field, or misspelled function`,
 		categories: []string{"codegen"},
 		labels: map[string]string{
 			"severity": "fatal",
 		},
 		guide: ``,
 
-		args:    []interface{}{},
+		args:    map[string]interface{}{},
 		wrapped: wrapped,
 	}
 
 	addCaller(&err)
-	return TemplateExecutionErr{err}
+	return &TemplateExecutionErr{err}
 }
 
 // GetSeverity returns the "severity" label for a TemplateExecutionErr instance.
-func (e TemplateExecutionErr) GetSeverity() string {
+func (e *TemplateExecutionErr) GetSeverity() string {
 	return "fatal"
 }
 func addCaller(err *erratum) {

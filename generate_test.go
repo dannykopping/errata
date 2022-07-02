@@ -56,7 +56,7 @@ func TestGenerate(t *testing.T) {
 				Package:  "errata",
 			},
 			expectedErr: func(err error) (error, bool) {
-				var expected FileNotFoundErr
+				var expected *FileNotFoundErr
 				ok := errors.As(err, &expected)
 				return expected, ok
 			},
@@ -69,7 +69,7 @@ func TestGenerate(t *testing.T) {
 				Package:  "errata",
 			},
 			expectedErr: func(err error) (error, bool) {
-				var expected FileNotFoundErr
+				var expected *FileNotFoundErr
 				ok := errors.As(err, &expected)
 				return expected, ok
 			},
@@ -82,7 +82,20 @@ func TestGenerate(t *testing.T) {
 				Package:  "errata",
 			},
 			expectedErr: func(err error) (error, bool) {
-				var expected InvalidSyntaxErr
+				var expected *InvalidSyntaxErr
+				ok := errors.As(err, &expected)
+				return expected, ok
+			},
+		},
+		{
+			name: "validation error: label/arg name clash",
+			args: CodeGenConfig{
+				Source:   "fixtures/label-arg-clash.hcl",
+				Template: "golang",
+				Package:  "errata",
+			},
+			expectedErr: func(err error) (error, bool) {
+				var expected *ArgumentLabelNameClashErr
 				ok := errors.As(err, &expected)
 				return expected, ok
 			},

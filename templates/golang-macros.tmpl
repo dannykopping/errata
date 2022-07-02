@@ -12,7 +12,7 @@
 {% endmacro %}
 
 {% macro args(items) export %}
-  {%- for item in items sorted %}
+  {%- for name, item in items sorted %}
     {{- item.Name }} {{ item.Type }},
   {%- endfor -%}
 {% endmacro %}

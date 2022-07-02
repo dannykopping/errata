@@ -5,7 +5,7 @@ type errorDefinition struct {
 	Message    string
 	Cause      string
 	Guide      string
-	Args       []arg
 	Categories []string
+	Args       map[string]arg
 	Labels     map[string]string
 }

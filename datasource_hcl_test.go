@@ -35,12 +35,12 @@ func TestNewHCLDatasource(t *testing.T) {
 				"code-2": {
 					Code:    "code-2",
 					Message: "This is another basic error",
-					Args: []arg{
-						{
+					Args: map[string]arg{
+						"first": {
 							Name: "first",
 							Type: "string",
 						},
-						{
+						"second": {
 							Name: "second",
 							Type: "bool",
 						},
@@ -63,7 +63,7 @@ func TestNewHCLDatasource(t *testing.T) {
 			fixture: "fixtures/missing-guide.hcl",
 			expectedErr: func(err error) (error, bool) {
 				// this is not actually the error we want, but hclsimple swallows the original error without wrapping it
-				var expected InvalidSyntaxErr
+				var expected *InvalidSyntaxErr
 				ok := errors.As(err, &expected)
 				return expected, ok
 			},
@@ -72,7 +72,7 @@ func TestNewHCLDatasource(t *testing.T) {
 			name:    "invalid syntax",
 			fixture: "fixtures/invalid-syntax.hcl",
 			expectedErr: func(err error) (error, bool) {
-				var expected InvalidSyntaxErr
+				var expected *InvalidSyntaxErr
 				ok := errors.As(err, &expected)
 				return expected, ok
 			},
@@ -81,7 +81,7 @@ func TestNewHCLDatasource(t *testing.T) {
 			name:    "missing database",
 			fixture: "fixtures/cantfindme.hcl",
 			expectedErr: func(err error) (error, bool) {
-				var expected FileNotFoundErr
+				var expected *FileNotFoundErr
 				ok := errors.As(err, &expected)
 				return expected, ok
 			},
@@ -90,7 +90,7 @@ func TestNewHCLDatasource(t *testing.T) {
 			name:    "empty database",
 			fixture: "fixtures/empty.hcl",
 			expectedErr: func(err error) (error, bool) {
-				var expected InvalidDatasourceErr
+				var expected *InvalidDatasourceErr
 				ok := errors.As(err, &expected)
 				return expected, ok
 			},

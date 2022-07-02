@@ -77,7 +77,7 @@ func main() {
 
 	err := app.Run(os.Args)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s failed to start:\n%s", app.Name, err)
+		fmt.Fprintf(os.Stderr, "eish encountered an error: %+v\n", err)
 
 		os.Exit(1)
 	}

@@ -78,23 +78,31 @@ func (h *hclDatasource) load() {
 	h.list = make(map[string]errorDefinition, len(h.Errors))
 
 	for _, e := range h.Errors {
-		var args []arg
-		for _, argRaw := range e.Args {
-			var arg arg
-			_ = gocty.FromCtyValue(argRaw, &arg)
-			args = append(args, arg)
-		}
-
 		h.list[e.Code] = errorDefinition{
 			Code:       e.Code,
 			Message:    e.Message,
 			Cause:      e.Cause,
 			Guide:      e.Guide,
-			Args:       args,
+			Args:       h.argsMap(e),
 			Categories: e.Categories,
 			Labels:     e.Labels,
 		}
 	}
+}
+
+func (h *hclDatasource) argsMap(e hclErrorDefinition) map[string]arg {
+	if len(e.Args) <= 0 {
+		return nil
+	}
+
+	args := make(map[string]arg, len(e.Args))
+
+	for _, argRaw := range e.Args {
+		var arg arg
+		_ = gocty.FromCtyValue(argRaw, &arg)
+		args[arg.Name] = arg
+	}
+	return args
 }
 
 func (h *hclDatasource) Options() errorOptions {
@@ -117,7 +125,14 @@ func (h *hclDatasource) FindByCode(code string) (errorDefinition, bool) {
 }
 
 func (h *hclDatasource) Validate() error {
-	// TODO: define validation rules
+	for _, e := range h.list {
+		for k := range e.Labels {
+			if _, found := e.Args[k]; found {
+				return NewInvalidDefinitionsErr(NewArgumentLabelNameClashErr(nil, k), h.path)
+			}
+		}
+	}
+
 	return nil
 }
 
