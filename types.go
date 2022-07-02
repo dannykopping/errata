@@ -6,6 +6,6 @@ type errorDefinition struct {
 	Cause      string
 	Guide      string
 	Categories []string
-	Args       map[string]arg
+	Args       []arg
 	Labels     map[string]string
 }

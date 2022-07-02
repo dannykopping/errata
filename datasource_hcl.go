@@ -84,24 +84,23 @@ func (h *hclDatasource) load() {
 			Message:    e.Message,
 			Cause:      e.Cause,
 			Guide:      e.Guide,
-			Args:       h.argsMap(e),
+			Args:       h.argsList(e),
 			Categories: e.Categories,
 			Labels:     e.Labels,
 		}
 	}
 }
 
-func (h *hclDatasource) argsMap(e hclErrorDefinition) map[string]arg {
+func (h *hclDatasource) argsList(e hclErrorDefinition) []arg {
+	var args []arg
 	if len(e.Args) <= 0 {
-		return nil
+		return args
 	}
-
-	args := make(map[string]arg, len(e.Args))
 
 	for _, argRaw := range e.Args {
 		var arg arg
 		_ = gocty.FromCtyValue(argRaw, &arg)
-		args[arg.Name] = arg
+		args = append(args, arg)
 	}
 	return args
 }
@@ -128,8 +127,10 @@ func (h *hclDatasource) FindByCode(code string) (errorDefinition, bool) {
 func (h *hclDatasource) Validate() error {
 	for _, e := range h.list {
 		for k := range e.Labels {
-			if _, found := e.Args[k]; found {
-				return NewInvalidDefinitionsErr(NewArgumentLabelNameClashErr(nil, k), h.path)
+			for _, a := range e.Args {
+				if k == a.Name {
+					return NewInvalidDefinitionsErr(NewArgumentLabelNameClashErr(nil, k), h.path)
+				}
 			}
 		}
 	}

@@ -152,9 +152,9 @@ func New{{ code | constantize }}Err(wrapped error, {{ args(error.Args) }} {{ con
     guide: `{{ error.Guide | escape_backtick -}}`,
 
     args: map[string]interface{}{
-      {% for name in error.Args %}
-        "{{ name }}": {{ name }},
-      {% endfor %}
+      {%- for arg in error.Args sorted %}
+        "{{ arg.Name }}": {{ arg.Name }},
+      {%- endfor %}
     },
     wrapped: wrapped,
   }
@@ -163,10 +163,10 @@ func New{{ code | constantize }}Err(wrapped error, {{ args(error.Args) }} {{ con
   return &{{ code | constantize }}Err{err}
 }
 
-{% for name in error.Args sorted %}
-// Get{{ name | constantize }} returns the {{ name | stringformat:"%q" }} argument for a {{ code | constantize }}Err instance.
-func (e *{{ code | constantize }}Err) Get{{ name | constantize }}() interface{} {
-  return e.args["{{ name }}"]
+{% for arg in error.Args sorted %}
+// Get{{ arg.Name | constantize }} returns the {{ arg.Name | stringformat:"%q" }} argument for a {{ code | constantize }}Err instance.
+func (e *{{ code | constantize }}Err) Get{{ arg.Name | constantize }}() interface{} {
+  return e.args["{{ arg.Name }}"]
 }
 {% endfor -%}
 

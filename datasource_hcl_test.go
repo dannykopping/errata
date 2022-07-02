@@ -35,12 +35,12 @@ func TestNewHCLDatasource(t *testing.T) {
 				"code-2": {
 					Code:    "code-2",
 					Message: "This is another basic error",
-					Args: map[string]arg{
-						"first": {
+					Args: []arg{
+						{
 							Name: "first",
 							Type: "string",
 						},
-						"second": {
+						{
 							Name: "second",
 							Type: "bool",
 						},
