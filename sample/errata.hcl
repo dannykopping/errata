@@ -5,7 +5,7 @@ options {
 }
 
 error "missing-values" {
-  message    = "The %q field is missing from the request"
+  message    = "Field is missing from the request"
   categories = ["login"]
   args       = [
     arg("missingField", "string")
@@ -26,7 +26,7 @@ error "invalid-request" {
 }
 
 error "invalid-email" {
-  message    = "Given email %q is invalid"
+  message    = "Given email is invalid"
   guide      = "Ensure the email address has a _username_, an `@` symbol, and a _domain_ name."
   categories = ["login"]
   args       = [
