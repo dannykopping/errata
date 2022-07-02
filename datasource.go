@@ -8,6 +8,8 @@ type DataSource interface {
 	// and false will be returned as the second return value
 	FindByCode(code string) (errorDefinition, bool)
 	Validate() error
-	// Version must indicate a unique version based on the given source data
-	Version() string
+	// Hash returns the hashed contents of the given datasource, to detect drift
+	Hash() string
+	// SchemaVersion returns the schema version of the given datasource
+	SchemaVersion() string
 }

@@ -20,10 +20,11 @@ func Generate(data CodeGenConfig, w io.Writer) error {
 	}
 
 	tmplData := map[string]interface{}{
-		"Package": data.Package,
-		"Options": source.Options(),
-		"Errors":  source.List(),
-		"Version": source.Version(),
+		"Package":       data.Package,
+		"Options":       source.Options(),
+		"Errors":        source.List(),
+		"Hash":          source.Hash(),
+		"SchemaVersion": source.SchemaVersion(),
 	}
 
 	renderer := createPongo2Renderer(loader)

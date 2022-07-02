@@ -77,7 +77,6 @@ error "argument-label-name-clash" {
   ]
   labels     = {
     severity = "fatal"
-    key = "value"
   }
 }
 

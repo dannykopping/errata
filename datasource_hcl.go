@@ -19,9 +19,10 @@ type hclDatasource struct {
 	sync.Mutex
 
 	source []byte
+	path   string
 	list   map[string]errorDefinition
 
-	SchemaVersion string `hcl:"version"`
+	Version string `hcl:"version"`
 	// options are, well, optional - and HCL only allows optional blocks as pointer types
 	Opts   *errorOptions        `hcl:"options,block"`
 	Errors []hclErrorDefinition `hcl:"error,block"`
@@ -136,8 +137,12 @@ func (h *hclDatasource) Validate() error {
 	return nil
 }
 
-func (h *hclDatasource) Version() string {
+func (h *hclDatasource) Hash() string {
 	return fmt.Sprintf("%x", md5.Sum(h.source))
+}
+
+func (h *hclDatasource) SchemaVersion() string {
+	return h.Version
 }
 
 func NewHCLDatasource(path string) (DataSource, error) {
@@ -204,6 +209,7 @@ func parseHCL(path string) (*hclDatasource, error) {
 
 	db.load()
 	db.source = b
+	db.path = path
 	return &db, nil
 }
 
