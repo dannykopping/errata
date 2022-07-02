@@ -10,7 +10,7 @@ options {
   File-related errata
 */
 error "file-not-found" {
-  message    = "File path %q is incorrect or inaccessible"
+  message    = "File path is incorrect or inaccessible"
   categories = ["file"]
   guide      = "Ensure the given file exists and can be accessed by errata"
   args       = [
@@ -21,7 +21,7 @@ error "file-not-found" {
   }
 }
 error "file-not-readable" {
-  message    = "File %q is unreadable"
+  message    = "File is unreadable"
   categories = ["file"]
   guide      = "Ensure the given file has the correct permissions"
   args       = [
@@ -36,7 +36,7 @@ error "file-not-readable" {
   Datasource-related errata
 */
 error "invalid-definitions" {
-  message    = "One or more definitions declared in %q are invalid"
+  message    = "One or more definitions declared in are invalid"
   categories = ["definitions", "validation"]
   args       = [
     arg("path", "string")
@@ -46,7 +46,7 @@ error "invalid-definitions" {
   }
 }
 error "invalid-syntax" {
-  message    = "File %q has syntax errors"
+  message    = "File has syntax errors"
   categories = ["parsing"]
   args       = [
     arg("path", "string")
@@ -57,7 +57,7 @@ error "invalid-syntax" {
 }
 
 error "invalid-datasource" {
-  message    = "Datasource file %q is invalid"
+  message    = "Datasource file is invalid"
   categories = ["datasource"]
   guide      = "Check the given datasource file for errors"
   args       = [
@@ -121,7 +121,7 @@ error "serve-web-ui" {
   }
 }
 error "serve-unknown-route" {
-  message    = "Requested route %q not defined"
+  message    = "Requested route not defined"
   args       = [
     arg("route", "string")
   ]
@@ -131,7 +131,7 @@ error "serve-unknown-route" {
   }
 }
 error "serve-method-not-allowed" {
-  message    = "Given HTTP method %q for requested route %q is not allowed"
+  message    = "Given HTTP method for requested route is not allowed"
   args       = [
     arg("method", "string"),
     arg("route", "string")
@@ -149,7 +149,7 @@ error "serve-unknown-code" {
   categories = ["serve", "web-ui"]
   labels     = {
     severity = "warning"
-    http_status_code : "404",
+    http_status_code = "404",
   }
 }
 error "serve-search-index" {

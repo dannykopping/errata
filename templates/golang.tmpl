@@ -66,7 +66,12 @@ func (e *erratum) UUID() string {
 // Format controls the verbosity of the printed error.
 func (e *erratum) Format(f fmt.State, verb rune) {
 	if verb == 'v' && f.Flag('+') {
-		f.Write([]byte(fmt.Sprintf("%s. For more details, see %s", e.Error(), e.HelpURL())))
+		var args []string
+		for k, v := range e.Args() {
+			args = append(args, fmt.Sprintf(`%s="%+v"`, k, v))
+		}
+
+		f.Write([]byte(fmt.Sprintf("%s (%s) For more details, see %s", e.Error(), strings.Join(args, ", "), e.HelpURL())))
 		if unwrapped := e.Unwrap(); unwrapped != nil {
 			if e, ok := unwrapped.(fmt.Formatter); ok {
 				f.Write([]byte("\n↳ "))
@@ -78,9 +83,9 @@ func (e *erratum) Format(f fmt.State, verb rune) {
 	}
 }
 
- func (e *erratum) Error() string {
- 	return fmt.Sprintf("[errata-%s] [%s:%v] %s", e.code, e.file, e.line, e.message)
- }
+func (e *erratum) Error() string {
+  return fmt.Sprintf("[%s] <%s:%v> %s", e.code, e.file, e.line, e.message)
+}
 
 func (e *erratum) HelpURL() string {
   return fmt.Sprintf("{{ Options.BaseURL }}%s", e.code)
@@ -120,7 +125,7 @@ func (e *erratum) Line() int {
 
 const (
 {%- for code, error in Errors sorted %}
-  {{ code | constantize }}ErrCode string = "{{ code }}"
+  {{ code | constantize }}ErrCode string = "{{ Options.Prefix }}{{ code }}"
 {%- endfor %}
 )
 
