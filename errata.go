@@ -34,7 +34,6 @@ type erratum struct {
 type Erratum interface {
 	// behave like a regular error
 	error
-
 	Unwrap() error
 
 	Code() string
@@ -59,13 +58,23 @@ func (e *erratum) UUID() string {
 	return e.uuid
 }
 
+// Format controls the verbosity of the printed error.
+func (e *erratum) Format(f fmt.State, verb rune) {
+	if verb == 'v' && f.Flag('+') {
+		f.Write([]byte(fmt.Sprintf("%s. For more details, see %s", e.Error(), e.HelpURL())))
+		if unwrapped := e.Unwrap(); unwrapped != nil {
+			if e, ok := unwrapped.(fmt.Formatter); ok {
+				f.Write([]byte("\n↳ "))
+				e.Format(f, verb)
+			}
+		}
+	} else {
+		f.Write([]byte(e.Error()))
+	}
+}
+
 func (e *erratum) Error() string {
-	// message := fmt.Sprintf("[errata-%s] [%s:%v] %s. For more details, see %s", e.code, e.file, e.line, e.message, e.HelpURL())
-	// if unwrapped := e.Unwrap(); unwrapped != nil {
-	// 	message = fmt.Sprintf("%s\n↳ %s", message, unwrapped.Error())
-	// }
-	// return fmt.Sprintf(message, e.Args()...)
-	return e.Message()
+	return fmt.Sprintf("[errata-%s] [%s:%v] %s", e.code, e.file, e.line, e.message)
 }
 
 func (e *erratum) HelpURL() string {
