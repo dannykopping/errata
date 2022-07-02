@@ -66,12 +66,19 @@ func (e *erratum) UUID() string {
 // Format controls the verbosity of the printed error.
 func (e *erratum) Format(f fmt.State, verb rune) {
 	if verb == 'v' && f.Flag('+') {
-		var args []string
-		for k, v := range e.Args() {
-			args = append(args, fmt.Sprintf(`%s="%+v"`, k, v))
-		}
+		args := func() string {
+			if len(e.Args()) <= 0 {
+				return ""
+			}
 
-		f.Write([]byte(fmt.Sprintf("%s (%s) For more details, see %s", e.Error(), strings.Join(args, ", "), e.HelpURL())))
+			var args []string
+			for k, v := range e.Args() {
+				args = append(args, fmt.Sprintf(`%s="%+v"`, k, v))
+			}
+			return fmt.Sprintf(` (%s)`, strings.Join(args, ", "))
+		}()
+
+		f.Write([]byte(fmt.Sprintf("%s%s For more details, see %s", e.Error(), args, e.HelpURL())))
 		if unwrapped := e.Unwrap(); unwrapped != nil {
 			if e, ok := unwrapped.(fmt.Formatter); ok {
 				f.Write([]byte("\n↳ "))
