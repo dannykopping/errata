@@ -1,41 +1,38 @@
-# `errata`
+# errata
 
-## WIP
+**errata** is a general purpose, language-agnostic toolkit for _error code enumeration (ECE)_.
 
-... this is a work in progress, don't use it yet ...
+ECE is the process of defining all the ways in which your software can fail. Think of it as negative documentation (describing how your system _fails_ as opposed to how it _works_).
 
----
+Consider a web application. _Aren't HTTP status codes enough?_ No. They are sometimes useful (`404 Not Found` is fairly clear), but others are so vague as to be pretty meaningless (`500 Internal Server Error`). Often an additional semantic layer is required to communicate what exactly went wrong, and what the caller (be they a human, an API client, etc) can do in response. HTTP status codes are perfect for describing the _category_ of problem (4xx client error, 5xx server error), but insufficient for the complex software of today. 
 
-`errata` is a tool with a simple but bold mission: to make software suck less.
-
-Software mainly sucks because errors happen, and they're rarely handled with grace and empathy.
+Major API vendors such as [Twilio](https://www.twilio.com/docs/api/errors), [Instagram](https://developers.facebook.com/docs/instagram-api/reference/error-codes/), and [Google Cloud](https://cloud.google.com/resource-manager/docs/core_errors) recognise this and use ECE in some form. **errata** aims to provide a mechanism for any software to deliver world-class error handling.
 
 ## Basic Concepts
 
-`errata`'s philosophy is that errors should have **at least** a static error `code`, a human-readable `message`, and a `unique reference`.
+**errata**'s philosophy is that errors should have _at least_ a static error `code` and a human-readable `message`.
 
-- the `code` is searchable, and because it's static it becomes _more easily_ searchable.
-- the `message` is displayed to the user alongside the code, to provide immediate context.
-- the `unique reference` enables the receiver of the error message to track down the cause of the error.
+- the `code` is searchable, and because it's static it becomes _more easily_ searchable
+- the `message` is displayed to the user alongside the code, to provide immediate context, and ideally to give an insight into what went wrong
 
-`errata` provides a DSL for defining these errors in a central location in which engineers, technical writers, support consultants, and others can collaborate on explaining what went wrong.
+Besides the basic `code` and `message`, including other valuable metadata like a unique reference (particularly useful in SaaS applications), labels, user guides, etc can be included.
 
 ### Definitions
 
-`errata` uses the [HCL](https://github.com/hashicorp/hcl) structured configuration language, used primarily by [Terraform](https://www.terraform.io/). It's easy to read, simple to write, and frankly fuck YAML already.
+**errata** uses the [HCL](https://github.com/hashicorp/hcl) structured configuration language, used primarily by [Terraform](https://www.terraform.io/). It's extensible, simple to read and write, and frankly - _fuck YAML_.
 
 ```hcl
 version = "0.1"
 
 error "file-not-found" {
-  message    = "File path %q is incorrect or inaccessible"
+  message    = "File path is incorrect or inaccessible"
   categories = ["file"]
   guide      = "Ensure the given file exists and can be accessed"
   args       = [
     arg("path", "string")
   ]
   labels     = {
-    severity = "fatal"
+    severity = "warn"
   }
 }
 
@@ -44,22 +41,24 @@ error "file-not-found" {
 
 The above example defines the `code` (**file-not-found**) and the `message`, along with some other useful metadata (more on this below).
 
-This is rather useless on its own. `errata` provides a language-agnostic mechanism for generating code based on these definitions using the [Pongo2](https://github.com/flosch/pongo2) templating engine.
+So, what can this definitions file be used for?
 
 ### Code Generation
 
+**errata** provides a language-agnostic mechanism for generating code based on these definitions using the [Pongo2](https://github.com/flosch/pongo2) templating engine.
+
 **errata** comes with a CLI tool called **eish** (_**e**rrata **i**nteractive **sh**ell_,
-[pronounced](http://ipa-reader.xyz/?text=e%C9%AA%CA%83) "eɪʃ") which generates code based on given `errata` definitions.
+[pronounced "eɪʃ"](http://ipa-reader.xyz/?text=e%C9%AA%CA%83)) which generates code based on given **errata** definitions.
 
 ```bash
 $ eish generate --source=errata.hcl --template=golang --package=errors
 ```
 
-This will generate a single file with all error definitions. See the [sample errata](sample/errata.hcl) and [generated source](sample/errata/errors.go). In fact, there's a whole [sample application](sample/) which uses `errata` definitions (and rather recursively, the `errata` library also uses [`errata` definitions](errata.hcl)).
+This will generate a single file with all error definitions. See the [sample application](sample/) which uses **errata** definitions (and rather recursively, the **errata** library also uses [**errata** definitions](errata.hcl)).
 
 ### Web UI
 
-`eish` also provides a simple web UI, allowing your `errata` definitions to be viewed and searched.
+`eish` also provides a simple web UI, allowing your **errata** definitions to be viewed and searched.
 
 ```bash
 $ eish serve --source=errata.hcl
