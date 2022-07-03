@@ -1,0 +1,4 @@
+# exclude web/ from language statistics
+# ...it's vain, I know, but I don't want this lib to seem like a majority CSS project 🙃
+# https://github.com/github/linguist/blob/master/docs/overrides.md#vendored-code
+web/** linguist-vendored
