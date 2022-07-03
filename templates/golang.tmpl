@@ -78,11 +78,13 @@ func (e *erratum) Format(f fmt.State, verb rune) {
 			return fmt.Sprintf(` (%s)`, strings.Join(args, ", "))
 		}()
 
-		f.Write([]byte(fmt.Sprintf("%s%s For more details, see %s", e.Error(), args, e.HelpURL())))
+		f.Write([]byte(fmt.Sprintf("%s%s. For more details, see %s", e.Error(), args, e.HelpURL())))
 		if unwrapped := e.Unwrap(); unwrapped != nil {
+			f.Write([]byte("\n↳ "))
 			if e, ok := unwrapped.(fmt.Formatter); ok {
-				f.Write([]byte("\n↳ "))
 				e.Format(f, verb)
+			} else if e, ok := unwrapped.(error); ok {
+				f.Write([]byte(e.Error()))
 			}
 		}
 	} else {
