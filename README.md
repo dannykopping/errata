@@ -67,3 +67,17 @@ $ eish serve --source=errata.hcl
 The web UI by default runs on port `37707`.
 
 ![Web UI](web-ui.png)
+
+### Supported Languages
+
+_If your language of choice is not yet available, consider contributing a template!_
+
+> _**errata** uses the [Pongo2](https://github.com/flosch/pongo2) templating engine_
+
+- [Golang](templates/golang.tmpl) (reference implementation)
+
+The code produced by **errata** aims to be:
+
+- idiomatic
+- easy to use
+- using native error/exception types as much as possible
