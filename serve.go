@@ -167,7 +167,7 @@ func (s *Server) NotFound(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) MethodNotAllowed(w http.ResponseWriter, r *http.Request) {
-	s.errorHandler(w, NewServeMethodNotAllowedErr(nil, r.Method, r.URL.Path))
+	s.errorHandler(w, NewServeMethodNotAllowedErr(nil, r.URL.Path, r.Method))
 }
 
 func filterMarkdown(md goldmark.Markdown) func(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, err *pongo2.Error) {

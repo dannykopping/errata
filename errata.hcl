@@ -133,8 +133,8 @@ error "serve-unknown-route" {
 error "serve-method-not-allowed" {
   message    = "Given HTTP method for requested route is not allowed"
   args       = [
+    arg("route", "string"),
     arg("method", "string"),
-    arg("route", "string")
   ]
   categories = ["serve", "web-ui"]
   labels     = {
