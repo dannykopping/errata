@@ -3,69 +3,103 @@ package http
 import (
 	"encoding/json"
 	"io"
+	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/dannykopping/errata/sample/errata"
-	"github.com/dannykopping/errata/sample/store"
-	"github.com/gofiber/fiber/v2"
+	"github.com/dannykopping/errata/sample/exec"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestErrorResponses(t *testing.T) {
-	store, err := store.NewUsersStore("../users.sqlite3")
-	require.NoError(t, err)
+	server := NewServer()
 
-	server := NewServer(store)
-
-	requests := []struct {
-		email              string
-		password           string
-		expectedStatus     int
+	tests := []struct {
+		name               string
+		command            string
+		args               []string
+		expectedResponse   *exec.Result
+		expectedStatusCode int
 		expectedErrataCode string
-		expectedBody       string
 	}{
-		{"valid@email.com", "password", fiber.StatusOK, "", "Logged in successfully as: valid@email.com"},
-		{"valid@email.com", "wrong", fiber.StatusForbidden, errata.IncorrectCredentialsErrCode, jsonBodyResponse(errata.IncorrectCredentialsErrCode)},
-		{"valid@email.com", "", fiber.StatusBadRequest, errata.MissingValuesErrCode, jsonBodyResponse(errata.MissingValuesErrCode)},
-		{"", "", fiber.StatusBadRequest, errata.MissingValuesErrCode, jsonBodyResponse(errata.MissingValuesErrCode)},
-		{"", "pass", fiber.StatusBadRequest, errata.MissingValuesErrCode, jsonBodyResponse(errata.MissingValuesErrCode)},
-		{"spam@email.com", "password", fiber.StatusForbidden, errata.AccountBlockedSpamErrCode, jsonBodyResponse(errata.AccountBlockedSpamErrCode)},
-		{"abuse@email.com", "password", fiber.StatusForbidden, errata.AccountBlockedAbuseErrCode, jsonBodyResponse(errata.AccountBlockedAbuseErrCode)},
-		{"abuse@email.com", "password", fiber.StatusForbidden, errata.AccountBlockedAbuseErrCode, jsonBodyResponse(errata.AccountBlockedAbuseErrCode)},
-		{"invalid.email", "password", fiber.StatusBadRequest, errata.InvalidEmailErrCode, jsonBodyResponse(errata.InvalidEmailErrCode)},
-		{"missing@email.com", "password", fiber.StatusForbidden, errata.IncorrectCredentialsErrCode, jsonBodyResponse(errata.IncorrectCredentialsErrCode)},
+		// expected
+		{
+			name:    "echo",
+			command: "/usr/bin/echo",
+			args:    []string{"-n", "hello world"},
+			expectedResponse: &exec.Result{
+				Stdout:   "hello world",
+				Stderr:   "",
+				ExitCode: 0,
+			},
+			expectedStatusCode: http.StatusOK,
+			expectedErrataCode: "",
+		},
+		{
+			name:               "missing command",
+			expectedStatusCode: http.StatusBadRequest,
+			expectedErrataCode: errata.MissingCommandErrCode,
+		},
+		{
+			name:               "invalid command path",
+			command:            "/usr/bin/nope",
+			expectedStatusCode: http.StatusNotFound,
+			expectedErrataCode: errata.ScriptNotFoundErrCode,
+		},
+
+		// unexpected, wrapped
+		{
+			name:    "permission denied",
+			command: "/usr/bin/kill",
+			args:    []string{"1"},
+			expectedResponse: &exec.Result{
+				Stdout:   "",
+				Stderr:   "kill: (1): Operation not permitted\n",
+				ExitCode: 1,
+			},
+			expectedStatusCode: http.StatusInternalServerError,
+			expectedErrataCode: errata.ScriptExecutionFailedErrCode,
+		},
+		{
+			name:    "error in script",
+			command: "/usr/bin/ls",
+			args:    []string{"/nonexistent"},
+			expectedResponse: &exec.Result{
+				Stdout:   "",
+				Stderr:   "/usr/bin/ls: cannot access '/nonexistent': No such file or directory\n",
+				ExitCode: 2,
+			},
+			expectedStatusCode: http.StatusInternalServerError,
+			expectedErrataCode: errata.ScriptExecutionFailedErrCode,
+		},
 	}
 
-	for _, request := range requests {
+	for _, tt := range tests {
 		form := url.Values{}
-		form.Set("email", request.email)
-		form.Set("password", request.password)
+		form.Set("command", tt.command)
+		form.Set("args", strings.Join(tt.args, " "))
 
-		req := httptest.NewRequest("POST", "/login", strings.NewReader(form.Encode()))
+		req := httptest.NewRequest("POST", "/exec", strings.NewReader(form.Encode()))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 		resp, err := server.Test(req, 2000)
 		require.NoError(t, err)
 
-		assert.Equal(t, request.expectedStatus, resp.StatusCode)
-		assert.Equal(t, request.expectedErrataCode, resp.Header.Get("X-Errata-Code"))
+		assert.Equal(t, tt.expectedStatusCode, resp.StatusCode)
+		assert.Equal(t, tt.expectedErrataCode, resp.Header.Get("X-Errata-Code"))
+
 		body, err := io.ReadAll(resp.Body)
-		assert.NoError(t, err)
-		assert.Contains(t, string(body), request.expectedErrataCode)
-	}
-}
+		require.NoError(t, err)
 
-func jsonBodyResponse(code string) string {
-	val := struct {
-		Code string `json:"code"`
-	}{
-		Code: code,
-	}
+		if tt.expectedResponse != nil {
+			var res *exec.Result
+			assert.NoError(t, json.Unmarshal(body, &res))
 
-	r, _ := json.Marshal(&val)
-	return string(r)
+			assert.EqualValues(t, tt.expectedResponse, res)
+		}
+	}
 }

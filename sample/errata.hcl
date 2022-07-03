@@ -4,73 +4,29 @@ options {
   base_url = "https://errata.codes/errata/sample/"
 }
 
-error "missing-values" {
-  message    = "Field is missing from the request"
-  categories = ["login"]
+error "missing-command" {
+  message    = "Command was not specified"
+  categories = ["validation"]
+  labels     = {
+    http_response_code : 400
+  }
+}
+
+error "script-not-found" {
+  message    = "Given script was not found"
+  categories = ["validation"]
   args       = [
-    arg("missingField", "string")
+    arg("path", "string")
   ]
-  labels     = {
-    http_response_code : 400
-    shell_exit_code : 1
+  labels = {
+    http_response_code : 404
   }
 }
 
-error "invalid-request" {
-  message    = "One or more values are missing"
-  categories = ["login"]
-  labels     = {
-    http_response_code : 400
-    shell_exit_code : 1
-  }
-}
-
-error "invalid-email" {
-  message    = "Given email is invalid"
-  guide      = "Ensure the email address has a _username_, an `@` symbol, and a _domain_ name."
-  categories = ["login"]
-  args       = [
-    arg("email", "string")
-  ]
-  labels     = {
-    http_response_code : 400
-    shell_exit_code : 1
-  }
-}
-
-# unsuccessful login errors
-error "incorrect-credentials" {
-  message    = "Given credentials are incorrect"
-  categories = ["login"]
-  labels     = {
-    http_response_code : 403
-    shell_exit_code : 2
-  }
-}
-
-# blocked errors
-error "account-blocked-spam" {
-  message    = "Account is blocked because of spam"
-  categories = ["login"]
-  labels     = {
-    http_response_code : 403
-    shell_exit_code : 3
-  }
-}
-error "account-blocked-abuse" {
-  message    = "Account is blocked because of abuse"
-  categories = ["login"]
-  labels     = {
-    http_response_code : 403
-    shell_exit_code : 3
-  }
-}
-
-# response errors
-error "response-formatting" {
-  message    = "Failed to format response body"
-  categories = ["internal"]
-  labels     = {
+error "script-execution-failed" {
+  message    = "Given script returned an error"
+  categories = ["execution"]
+  labels = {
     http_response_code : 500
   }
 }
