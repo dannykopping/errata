@@ -3,6 +3,7 @@ package errata
 import (
 	"bytes"
 	"embed"
+	"errors"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -130,8 +131,19 @@ func (s *Server) render(w http.ResponseWriter, path string, data pongo2.Context)
 		s.errorHandler(w, NewFileNotReadableErr(err, path))
 	}
 
-	tmpl, err := pongo2.FromBytes(b)
+	set := pongo2.NewSet("web", pongo2.NewFSLoader(web))
+
+	tmpl, err := set.FromBytes(b)
 	if err != nil {
+		// pongo2 needs errata!
+		if err, ok := err.(*pongo2.Error); ok {
+			var pathErr *fs.PathError
+			if err.OrigError.Error() == "unable to resolve template" || errors.As(err.OrigError, &pathErr) {
+				s.errorHandler(w, NewTemplateExecutionErr(err))
+				return
+			}
+		}
+
 		s.errorHandler(w, NewInvalidSyntaxErr(err, path))
 		return
 	}
@@ -195,7 +207,7 @@ func (s *Server) errorHandler(w http.ResponseWriter, err error) {
 		}
 	}
 
-	http.Error(w, err.Error(), statusCode)
+	http.Error(w, fmt.Sprintf("%+v", err), statusCode)
 }
 
 type HTTPStatusCodeExtractor interface {
