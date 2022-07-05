@@ -1,6 +1,6 @@
 {% import "web/item.gohtml" erratum %}
 {% import "web/sidebar.gohtml" sidebar %}
-{% ssi "web/header.gohtml" %}
+{% ssi "web/header.gohtml" parsed %}
 
 <div class="docs-wrapper">
   {{ sidebar(Errors) }}
@@ -21,4 +21,4 @@
   </div>
 </div><!--//docs-wrapper-->
 
-{% ssi "web/footer.gohtml" %}
+{% ssi "web/footer.gohtml" parsed %}
