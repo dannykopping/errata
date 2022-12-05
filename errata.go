@@ -128,21 +128,21 @@ func (e *erratum) Line() int {
 }
 
 const (
-	ArgumentLabelNameClashErrCode string = "errata-argument-label-name-clash"
-	CodeGenErrCode                string = "errata-code-gen"
-	FileNotFoundErrCode           string = "errata-file-not-found"
-	FileNotReadableErrCode        string = "errata-file-not-readable"
-	InvalidDatasourceErrCode      string = "errata-invalid-datasource"
-	InvalidDefinitionsErrCode     string = "errata-invalid-definitions"
-	InvalidSyntaxErrCode          string = "errata-invalid-syntax"
-	MarkdownRenderingErrCode      string = "errata-markdown-rendering"
-	ServeMethodNotAllowedErrCode  string = "errata-serve-method-not-allowed"
-	ServeSearchIndexErrCode       string = "errata-serve-search-index"
-	ServeSearchMissingTermErrCode string = "errata-serve-search-missing-term"
-	ServeUnknownCodeErrCode       string = "errata-serve-unknown-code"
-	ServeUnknownRouteErrCode      string = "errata-serve-unknown-route"
-	ServeWebUiErrCode             string = "errata-serve-web-ui"
-	TemplateExecutionErrCode      string = "errata-template-execution"
+	ArgumentLabelNameClashErrCode string = "errata-49204123"
+	CodeGenErrCode                string = "errata-c9101597"
+	FileNotFoundErrCode           string = "errata-33aa04ca"
+	FileNotReadableErrCode        string = "errata-7c49d62a"
+	InvalidDatasourceErrCode      string = "errata-356bb94a"
+	InvalidDefinitionsErrCode     string = "errata-c48cc9cb"
+	InvalidSyntaxErrCode          string = "errata-c8cb48c"
+	MarkdownRenderingErrCode      string = "errata-c65f2e1"
+	ServeMethodNotAllowedErrCode  string = "errata-cdde3f13"
+	ServeSearchIndexErrCode       string = "errata-dc1b889e"
+	ServeSearchMissingTermErrCode string = "errata-bb970173"
+	ServeUnknownCodeErrCode       string = "errata-4c3ba3af"
+	ServeUnknownRouteErrCode      string = "errata-6b004503"
+	ServeWebUiErrCode             string = "errata-4dd4f40c"
+	TemplateExecutionErrCode      string = "errata-6afda6b0"
 )
 
 type ArgumentLabelNameClashErr struct {
@@ -194,7 +194,7 @@ type TemplateExecutionErr struct {
 func NewArgumentLabelNameClashErr(wrapped error, key string) *ArgumentLabelNameClashErr {
 	err := erratum{
 		code:       ArgumentLabelNameClashErrCode,
-		message:    `An error definition contains a label with the same name as an argument`,
+		message:    fmt.Sprintf(`An error definition contains a label with the same name as an argument`),
 		categories: []string{"datasource", "validation"},
 		labels: map[string]string{
 			"severity": "fatal",
@@ -224,7 +224,7 @@ func (e *ArgumentLabelNameClashErr) GetSeverity() string {
 func NewCodeGenErr(wrapped error) *CodeGenErr {
 	err := erratum{
 		code:       CodeGenErrCode,
-		message:    `Code generation failed`,
+		message:    fmt.Sprintf(`Code generation failed`),
 		categories: []string{"codegen"},
 		labels: map[string]string{
 			"severity": "fatal",
@@ -247,7 +247,7 @@ func (e *CodeGenErr) GetSeverity() string {
 func NewFileNotFoundErr(wrapped error, path string) *FileNotFoundErr {
 	err := erratum{
 		code:       FileNotFoundErrCode,
-		message:    `File path is incorrect or inaccessible`,
+		message:    fmt.Sprintf(`File path is incorrect or inaccessible`),
 		categories: []string{"file"},
 		labels: map[string]string{
 			"severity": "fatal",
@@ -277,7 +277,7 @@ func (e *FileNotFoundErr) GetSeverity() string {
 func NewFileNotReadableErr(wrapped error, path string) *FileNotReadableErr {
 	err := erratum{
 		code:       FileNotReadableErrCode,
-		message:    `File is unreadable`,
+		message:    fmt.Sprintf(`File is unreadable`),
 		categories: []string{"file"},
 		labels: map[string]string{
 			"severity": "fatal",
@@ -307,7 +307,7 @@ func (e *FileNotReadableErr) GetSeverity() string {
 func NewInvalidDatasourceErr(wrapped error, path string) *InvalidDatasourceErr {
 	err := erratum{
 		code:       InvalidDatasourceErrCode,
-		message:    `Datasource file is invalid`,
+		message:    fmt.Sprintf(`Datasource file is invalid`),
 		categories: []string{"datasource"},
 		labels: map[string]string{
 			"severity": "fatal",
@@ -337,7 +337,7 @@ func (e *InvalidDatasourceErr) GetSeverity() string {
 func NewInvalidDefinitionsErr(wrapped error, path string) *InvalidDefinitionsErr {
 	err := erratum{
 		code:       InvalidDefinitionsErrCode,
-		message:    `One or more definitions declared in are invalid`,
+		message:    fmt.Sprintf(`One or more definitions declared in are invalid`),
 		categories: []string{"definitions", "validation"},
 		labels: map[string]string{
 			"severity": "fatal",
@@ -367,7 +367,7 @@ func (e *InvalidDefinitionsErr) GetSeverity() string {
 func NewInvalidSyntaxErr(wrapped error, path string) *InvalidSyntaxErr {
 	err := erratum{
 		code:       InvalidSyntaxErrCode,
-		message:    `File has syntax errors`,
+		message:    fmt.Sprintf(`File has syntax errors`),
 		categories: []string{"parsing"},
 		labels: map[string]string{
 			"severity": "fatal",
@@ -397,7 +397,7 @@ func (e *InvalidSyntaxErr) GetSeverity() string {
 func NewMarkdownRenderingErr(wrapped error) *MarkdownRenderingErr {
 	err := erratum{
 		code:       MarkdownRenderingErrCode,
-		message:    `Markdown rendering failed`,
+		message:    fmt.Sprintf(`Markdown rendering failed`),
 		categories: []string{"web-ui"},
 		labels: map[string]string{
 			"severity": "warning",
@@ -420,7 +420,7 @@ func (e *MarkdownRenderingErr) GetSeverity() string {
 func NewServeMethodNotAllowedErr(wrapped error, route string, method string) *ServeMethodNotAllowedErr {
 	err := erratum{
 		code:       ServeMethodNotAllowedErrCode,
-		message:    `Given HTTP method for requested route is not allowed`,
+		message:    fmt.Sprintf(`Given HTTP method for requested route is not allowed`),
 		categories: []string{"serve", "web-ui"},
 		labels: map[string]string{
 			"severity": "warning",
@@ -456,7 +456,7 @@ func (e *ServeMethodNotAllowedErr) GetSeverity() string {
 func NewServeSearchIndexErr(wrapped error) *ServeSearchIndexErr {
 	err := erratum{
 		code:       ServeSearchIndexErrCode,
-		message:    `Failed to build search index`,
+		message:    fmt.Sprintf(`Failed to build search index`),
 		categories: []string{"serve", "web-ui", "search"},
 		labels: map[string]string{
 			"severity": "fatal",
@@ -479,7 +479,7 @@ func (e *ServeSearchIndexErr) GetSeverity() string {
 func NewServeSearchMissingTermErr(wrapped error) *ServeSearchMissingTermErr {
 	err := erratum{
 		code:       ServeSearchMissingTermErrCode,
-		message:    `Search request is missing a "term" query string parameter`,
+		message:    fmt.Sprintf(`Search request is missing a "term" query string parameter`),
 		categories: []string{"serve", "web-ui", "search"},
 		labels: map[string]string{
 			"severity": "warning",
@@ -502,7 +502,7 @@ func (e *ServeSearchMissingTermErr) GetSeverity() string {
 func NewServeUnknownCodeErr(wrapped error, code string) *ServeUnknownCodeErr {
 	err := erratum{
 		code:       ServeUnknownCodeErrCode,
-		message:    `Cannot find error definition for given code %q`,
+		message:    fmt.Sprintf(`Cannot find error definition for given code %q`),
 		categories: []string{"serve", "web-ui"},
 		labels: map[string]string{
 			"http_status_code": "404",
@@ -538,7 +538,7 @@ func (e *ServeUnknownCodeErr) GetSeverity() string {
 func NewServeUnknownRouteErr(wrapped error, route string) *ServeUnknownRouteErr {
 	err := erratum{
 		code:       ServeUnknownRouteErrCode,
-		message:    `Requested route not defined`,
+		message:    fmt.Sprintf(`Requested route not defined`),
 		categories: []string{"serve", "web-ui"},
 		labels: map[string]string{
 			"severity": "warning",
@@ -568,7 +568,7 @@ func (e *ServeUnknownRouteErr) GetSeverity() string {
 func NewServeWebUiErr(wrapped error, path string) *ServeWebUiErr {
 	err := erratum{
 		code:       ServeWebUiErrCode,
-		message:    `Cannot serve web UI for datasource %q`,
+		message:    fmt.Sprintf(`Cannot serve web UI for datasource %q`),
 		categories: []string{"serve", "web-ui"},
 		labels: map[string]string{
 			"severity": "fatal",
@@ -598,7 +598,7 @@ func (e *ServeWebUiErr) GetSeverity() string {
 func NewTemplateExecutionErr(wrapped error) *TemplateExecutionErr {
 	err := erratum{
 		code:       TemplateExecutionErrCode,
-		message:    `Error in template execution`,
+		message:    fmt.Sprintf(`Error in template execution`),
 		categories: []string{"codegen"},
 		labels: map[string]string{
 			"severity": "fatal",

@@ -35,26 +35,29 @@ func preparePongo2() {
 		return pongo2.AsValue(fmt.Sprintf("%x", hasher.Sum32())), nil
 	})
 
-	pongo2.RegisterFilter("macro_expander", func(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, err *pongo2.Error) {
+	pongo2.RegisterFilter("macro_expand", func(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, err *pongo2.Error) {
 		str := in.String()
 		repl := param.String()
 		args := []string{}
 
-		tags := TagRegex.FindAllStringSubmatch(str, -1)
-		for _, tag := range tags {
-			escaped := tag[1] != ""
-			if escaped {
-				continue
+		raw := 0
+		escaped := TagRegex.SubexpIndex("escaped")
+		arg := TagRegex.SubexpIndex("arg")
+
+		str = TagRegex.ReplaceAllStringFunc(str, func(s string) string {
+			matches := TagRegex.FindStringSubmatch(s)
+
+			// if the given matches are unexpected, replace with full match group
+			if len(matches) < escaped || len(matches) < arg || matches[escaped] != "" {
+				return matches[raw]
 			}
 
-			str = strings.Replace(str, tag[0], repl, 1)
-			args = append(args, tag[2])
-		}
+			args = append(args, matches[arg])
 
-		return pongo2.AsValue([]interface{}{
-			str,
-			args,
-		}), nil
+			return repl
+		})
+
+		return pongo2.AsValue(strings.Join([]string{fmt.Sprintf("`%s`", str), strings.Join(args, ", ")}, ", ")), nil
 	})
 
 	pongo2.SetAutoescape(false)
