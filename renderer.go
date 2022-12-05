@@ -15,7 +15,11 @@ type pongo2Renderer struct {
 	loader *templateLoader
 }
 
-var TagRegex = regexp.MustCompile(`(?P<escaped>\\)?<(?P<arg>[^\>]+)>`)
+var (
+	TagRegex = regexp.MustCompile(`(?P<escaped>\\)?<(?P<arg>[^\>]+)>`)
+	EscIdx   = TagRegex.SubexpIndex("escaped")
+	ArgIx    = TagRegex.SubexpIndex("arg")
+)
 
 func preparePongo2() {
 	pongo2.RegisterFilter("constantize", func(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, err *pongo2.Error) {
@@ -41,18 +45,16 @@ func preparePongo2() {
 		args := []string{}
 
 		raw := 0
-		escaped := TagRegex.SubexpIndex("escaped")
-		arg := TagRegex.SubexpIndex("arg")
 
 		str = TagRegex.ReplaceAllStringFunc(str, func(s string) string {
 			matches := TagRegex.FindStringSubmatch(s)
 
 			// if the given matches are unexpected, replace with full match group
-			if len(matches) < escaped || len(matches) < arg || matches[escaped] != "" {
+			if len(matches) < EscIdx || len(matches) < ArgIx || matches[EscIdx] != "" {
 				return matches[raw]
 			}
 
-			args = append(args, matches[arg])
+			args = append(args, matches[ArgIx])
 
 			return repl
 		})
