@@ -134,7 +134,7 @@ func (e *erratum) Line() int {
 
 const (
 {%- for code, error in Errors sorted %}
-  {{ code | constantize }}ErrCode string = "{{ Options.Prefix }}{{ code }}"
+  {{ code | constantize }}ErrCode string = "{{ Options.Prefix }}{{ code | fnv32a }}"
 {%- endfor %}
 )
 
@@ -148,7 +148,7 @@ type {{ code | constantize }}Err struct {
 func New{{ code | constantize }}Err(wrapped error, {{ args(error.Args) }} {{ contexts(error.Definition.context) }}) *{{ code | constantize }}Err {
   err := erratum{
     code: {{ code | constantize }}ErrCode,
-    message: `{{ error.Message | escape_backtick -}}`,
+    message: {{ error.Message | macro_expander:" %q " -}},
     categories: []string{ {{- quote_list(error.Categories) -}} },
     labels: map[string]string{ {{ quote_map(error.Labels) }} },
     guide: `{{ error.Guide | escape_backtick -}}`,

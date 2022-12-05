@@ -1,7 +1,10 @@
 package errata
 
 import (
+	"fmt"
+	"hash/fnv"
 	"io"
+	"regexp"
 	"strings"
 
 	"github.com/flosch/pongo2/v5"
@@ -11,6 +14,8 @@ import (
 type pongo2Renderer struct {
 	loader *templateLoader
 }
+
+var TagRegex = regexp.MustCompile(`(?P<escaped>\\)?<(?P<arg>[^\>]+)>`)
 
 func preparePongo2() {
 	pongo2.RegisterFilter("constantize", func(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, err *pongo2.Error) {
@@ -22,6 +27,36 @@ func preparePongo2() {
 		splits := strings.Split(in.String(), "`")
 		return pongo2.AsValue(strings.Join(splits, "` + \"`\" + `")), nil
 	})
+
+	pongo2.RegisterFilter("fnv32a", func(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, err *pongo2.Error) {
+		hasher := fnv.New32a()
+		hasher.Write([]byte(in.String())) //nolint: errcheck
+
+		return pongo2.AsValue(fmt.Sprintf("%x", hasher.Sum32())), nil
+	})
+
+	pongo2.RegisterFilter("macro_expander", func(in *pongo2.Value, param *pongo2.Value) (out *pongo2.Value, err *pongo2.Error) {
+		str := in.String()
+		repl := param.String()
+		args := []string{}
+
+		tags := TagRegex.FindAllStringSubmatch(str, -1)
+		for _, tag := range tags {
+			escaped := tag[1] != ""
+			if escaped {
+				continue
+			}
+
+			str = strings.Replace(str, tag[0], repl, 1)
+			args = append(args, tag[2])
+		}
+
+		return pongo2.AsValue([]interface{}{
+			str,
+			args,
+		}), nil
+	})
+
 	pongo2.SetAutoescape(false)
 }
 
