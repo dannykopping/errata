@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	{% for i in Options.Imports sorted -%}
-	  {{- i | stringformat:"%q" }}
+	{% for i in Options.Imports sorted %}
+	  {{ i | stringformat:"%q" }}
 	{%- endfor %}
 )
 
@@ -50,6 +50,9 @@ type Erratum interface {
 
 	UUID() string
 	HelpURL() string
+
+	GRPCStatus() *status.Status
+	ToHTTPResponse() *httpgrpc.HTTPResponse
 }
 
 func (e *erratum) Unwrap() error {
@@ -132,6 +135,55 @@ func (e *erratum) Line() int {
 	return e.line
 }
 
+type HTTPResponder interface {
+	Erratum
+	GetHttpResponse() string
+}
+
+type GRPCResponder interface {
+	Erratum
+	GetGrpcResponse() string
+}
+
+// GRPCStatus returns the erratum as a httpgrpc HTTP response.
+func (e *erratum) GRPCStatus() *status.Status {
+	details, err := status.New(codes.Internal, e.Error()).WithDetails(e.ToHTTPResponse())
+	if err != nil {
+		return status.New(codes.Internal, fmt.Errorf("failed to generate httpgrpc response: %w", err).Error())
+	}
+	return details
+}
+
+// ToHTTPResponse returns the erratum as a httpgrpc HTTP response.
+func (e *erratum) ToHTTPResponse() *httpgrpc.HTTPResponse {
+ 	body := struct {
+ 		Message string                 `json:"message"`
+ 		Args    map[string]interface{} `json:"args"`
+ 		Code    string                 `json:"code"`
+ 		Guide   string                 `json:"guide"`
+ 		URL     string                 `json:"url"`
+ 	}{
+ 		Message: e.Message(),
+ 		Args:    e.Args(),
+ 		Code:    e.Code(),
+ 		Guide:   e.Guide(),
+ 		URL:     e.HelpURL(),
+ 	}
+
+ 	j, _ := json.Marshal(body)
+
+ 	return &httpgrpc.HTTPResponse{
+ 		Body: j,
+ 		Code: http.StatusInternalServerError,
+ 		Headers: []*httpgrpc.Header{
+ 			{
+ 				Key:    "Errata-Code",
+ 				Values: []string{e.Code()},
+ 			},
+ 		},
+ 	}
+ }
+
 const (
 {%- for code, error in Errors sorted %}
   {{ code | constantize }}ErrCode string = "{{ Options.Prefix }}{{ code | fnv32a }}"
@@ -179,7 +231,15 @@ func (e *{{ code | constantize }}Err) Get{{ label | constantize }}() string {
 }
 {% endfor -%}
 
-{% endfor -%}
+func (e *{{ code | constantize }}Err) GRPCStatus() *status.Status {
+	return grpcStatus(e)
+}
+
+func (e *{{ code | constantize }}Err) ToHTTPResponse() *httpgrpc.HTTPResponse {
+	return toHTTPResponse(e)
+}
+
+{% endfor %}
 
 func addCaller(err *erratum) {
 	_, file, line, ok := runtime.Caller(3)
@@ -196,4 +256,57 @@ func addCaller(err *erratum) {
 
 func generateReference(code string) string {
 	return fmt.Sprintf("%x", sha1.Sum([]byte(code + time.Now().Format(time.RFC3339Nano))))
+}
+
+// grpcStatus returns the erratum as a grpc response with an embedded HTTP response.
+func grpcStatus(e Erratum) *status.Status {
+	code := codes.Internal
+	if e, ok := e.(GRPCResponder); ok {
+		if c, ex := strconv.Atoi(e.GetGrpcResponse()); ex == nil {
+			code = codes.Code(uint32(c))
+		}
+	}
+
+	details, err := status.New(code, e.Error()).WithDetails(toHTTPResponse(e))
+	if err != nil {
+		return status.New(code, fmt.Errorf("failed to generate httpgrpc response: %w", err).Error())
+	}
+	return details
+}
+
+// toHTTPResponse returns the erratum as a httpgrpc HTTP response.
+func toHTTPResponse(e Erratum) *httpgrpc.HTTPResponse {
+	body := struct {
+		Message string                 `json:"message"`
+		Args    map[string]interface{} `json:"args"`
+		Code    string                 `json:"code"`
+		Guide   string                 `json:"guide"`
+		URL     string                 `json:"url"`
+	}{
+		Message: e.Message(),
+		Args:    e.Args(),
+		Code:    e.Code(),
+		Guide:   e.Guide(),
+		URL:     e.HelpURL(),
+	}
+
+	j, _ := json.Marshal(body)
+
+	code := http.StatusInternalServerError
+	if err, ok := e.(HTTPResponder); ok {
+		if c, ex := strconv.Atoi(err.GetHttpResponse()); ex == nil {
+			code = c
+		}
+	}
+
+	return &httpgrpc.HTTPResponse{
+		Body: j,
+		Code: int32(code),
+		Headers: []*httpgrpc.Header{
+			{
+				Key:    "Errata-Code",
+				Values: []string{e.Code()},
+			},
+		},
+	}
 }
